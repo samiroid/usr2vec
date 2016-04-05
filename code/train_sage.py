@@ -1,6 +1,6 @@
 import cPickle
 from collections import Counter
-from ipdb import set_trace
+# from ipdb import set_trace
 import numpy as np
 from my_utils import colstr
 import time
@@ -30,12 +30,13 @@ def stream_estimate_user(instance):
 	user_ll = sage.evaluate(user, test_matrix.todense())
 	# set_trace()
 	return obj/train_matrix.shape[1], user_ll/test_matrix.shape[1], user, sage.user_etas.get_value()[:,user]				 
+
 if __name__ == "__main__":
 
-	stuff_pickle, train_data_path, sage_params_path, n_jobs = sys.argv[1:]
+	aux_pickle, train_data_path, sage_params_path, n_jobs = sys.argv[1:]
 	n_jobs = int(n_jobs)
 	print "Loading data"
-	with open(stuff_pickle,"r") as fid:
+	with open(aux_pickle,"r") as fid:
 		wrd2idx,usr2idx,back_word_probs,_,_ = cPickle.load(fid)	
 		
 	t0 = time.time()	
@@ -68,15 +69,15 @@ if __name__ == "__main__":
 				for _ in xrange(n_jobs): current_samples.append(training_data.next())
 			except StopIteration:  				
 				done=True			
-			# res = [ stream_estimate_user(instance) for instance in current_samples]
-			res = Parallel(n_jobs=n_jobs)(delayed(stream_estimate_user)(instance)
-	                               for instance in current_samples)
+			res = [ stream_estimate_user(instance) for instance in current_samples]
+			# res = Parallel(n_jobs=n_jobs)(delayed(stream_estimate_user)(instance)
+	  #                              for instance in current_samples)
 			for r in res:
 				obj    += r[0]
 				user_ll+= r[1]
 				user    = r[2]
 				params  = r[3]  
-				#update user parameters with the result of this training epochs
+				#update user parameters with the result of this training epoch
 				current_sage_params[:,user] = params
 			n_examples+=len(res)
 		#average objective and user likelihood

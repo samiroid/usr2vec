@@ -40,7 +40,7 @@ with open(clean_user_tweets,"r") as fid:
 	for line in fid:	
 		usr = line.split("\t")[0] 		
 		all_users[usr] = None
-		message = line.split("\t")[1].decode("utf-8").split()		
+		message = line.split("\t")[1].decode("utf-8").split()			
 		word_counts.update(message)		
 		#remember the max message length
 		# if len(message) > max_msg_len: max_msg_len = len(message)
@@ -79,12 +79,12 @@ prev_user = None
 prev_user_data = []
 #write train data
 f_train = open(training_data_path,"wb") 
-#write train data for SAGE
+#write train data for SAGE (SAGE needs sparse matrices)
 f_sage = open(sage_data_path,"wb") 
 with open(clean_user_tweets,"r") as fid:		
 	for j, line in enumerate(fid):	
 		user = line.split("\t")[0] 		
-		message = line.split("\t")[1].decode("utf-8").split()			
+		message = line.split("\t")[1].decode("utf-8").split()	
 		u_idx = usr2idx[user] 
 		if j==0: prev_user = u_idx #first user
 		#convert to indices
@@ -100,7 +100,7 @@ with open(clean_user_tweets,"r") as fid:
 			rng.shuffle(prev_user_data)
 			split = int(len(prev_user_data)*.9)
 			train = prev_user_data[:split]
-			test = prev_user_data[split:]				
+			test  = prev_user_data[split:]				
 			stPickle.s_dump_elt([prev_user, train, test], f_train)
 			#save data as sparse matrices for SAGE
 			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
@@ -115,22 +115,22 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)				
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]
-			stPickle.s_dump_elt([prev_user, train, test], f_train)							
+			stPickle.s_dump_elt([prev_user, train, test], f_train)	
 			#save data as sparse matrices for SAGE
-			train_matrix = as_sparse_matrix(train, len(wrd2idx))			
+			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
 			test_matrix  = as_sparse_matrix(test, len(wrd2idx))		
 			stPickle.s_dump_elt([prev_user, train_matrix, test_matrix], f_sage)				
 		prev_user = u_idx
 		prev_user_data.append(msg_idx)
 print "Computing background word distributions (for SAGE)"
-word_probs = word_counts / word_counts.sum(0)
+# word_probs = word_counts / word_counts.sum(0)
 #divide along axis to get likelihoods
 usr_lang_model = usr_wrd_counts / usr_wrd_counts.sum(0)[np.newaxis:,]
 
 #pickle the word and user indices
 print "Pickling stuff..."
 with open(stuff_pickle,"wb") as fid:
-	cPickle.dump([wrd2idx,usr2idx,word_probs,usr_lang_model,E], fid, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump([wrd2idx,usr2idx,word_counts,usr_lang_model,E], fid, cPickle.HIGHEST_PROTOCOL)
 
 
 
