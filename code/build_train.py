@@ -89,7 +89,8 @@ with open(clean_user_tweets,"r") as fid:
 		u_idx = usr2idx[user] 
 		if j==0: prev_user = u_idx #first user
 		#convert to indices
-		msg_idx = [wrd2idx[w] for w in message if w in wrd2idx]			
+		msg_idx = [wrd2idx[w] for w in message if w in wrd2idx]
+		if len(msg_idx)==0: continue			
 		#compute background and user word distributions (for SAGE)
 		for w_idx in msg_idx:								
 			word_counts[w_idx]+=1	
