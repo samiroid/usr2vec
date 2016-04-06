@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 def stream_estimate_user(instance):	
 	user,train_matrix,test_matrix = instance	
 	obj=0
-	user_ll=0		
+	# user_ll=0		
 	n_batches = (train_matrix.shape[1]*1./mbsize) 
 	#if the number of batches is not a whole number add one
 	if n_batches%1 != 0: n_batches+=1    
@@ -27,9 +27,15 @@ def stream_estimate_user(instance):
 			d = train_matrix[:,j*mbsize:train_matrix.shape[1]].todense()
 		obj += sage.train(user,d)			
 	#evaluate 			
-	user_ll = sage.evaluate(user, test_matrix.todense())
+	# user_ll = sage.evaluate(user, test_matrix.todense())
 	# set_trace()
-	return obj/train_matrix.shape[1], user_ll/test_matrix.shape[1], user, sage.user_etas.get_value()[:,user]				 
+	return obj/train_matrix.shape[1], user, sage.user_etas.get_value()[:,user]				 
+
+def stream_estimate_test(instance):	
+	user,train_matrix,test_matrix = instance		
+	user_ll = sage.evaluate(user, test_matrix.todense())	
+	return user_ll/test_matrix.shape[1]
+
 
 if __name__ == "__main__":
 	
@@ -43,6 +49,9 @@ if __name__ == "__main__":
 	#training parameters 
 	#lrate = 0.00005 + epochs = 200 + mbsize = 400 --> .615
 	lrate = 0.00005	
+	# lrate = 0.000001	
+	# lrate = 0.0001	
+	# lrate = 0.0005	
 	epochs = 200
 	mbsize = 400
 	patience = 5	
@@ -58,7 +67,7 @@ if __name__ == "__main__":
 	print "mbsize: %d | lrate: %.5f" % (mbsize,lrate)
 	for e in xrange(epochs):	
 		obj=0	
-		user_ll = 0 
+		user_ll = 0 		
 		t0_in = time.time()
 		done = False
 		n_examples = 0
@@ -69,22 +78,45 @@ if __name__ == "__main__":
 				for _ in xrange(n_jobs): current_samples.append(training_data.next())
 			except StopIteration:  				
 				done=True			
-			res = [ stream_estimate_user(instance) for instance in current_samples]
-			# res = Parallel(n_jobs=n_jobs)(delayed(stream_estimate_user)(instance)
-	  #                              for instance in current_samples)
+			# res = [ stream_estimate_user(instance) for instance in current_samples]
+			res = Parallel(n_jobs=n_jobs)(delayed(stream_estimate_user)(instance)
+	                               for instance in current_samples)
 			for r in res:
 				obj    += r[0]
-				user_ll+= r[1]
-				user    = r[2]
-				params  = r[3]  
+				# user_ll+= r[1]
+				user    = r[1]
+				params  = r[2]  
 				#update user parameters with the result of this training epoch
 				current_sage_params[:,user] = params
 			n_examples+=len(res)
-		#average objective and user likelihood
-		obj/=n_examples
-		user_ll/=n_examples
 		#update model with new user parameters
 		sage.user_etas.set_value(current_sage_params)
+		#cycle through the data again to do evaluation
+		done=False
+		tf.seek(0)
+		training_data = stPickle.s_load(tf)        
+		while not done:
+			try:
+				current_samples = []
+				for _ in xrange(n_jobs): current_samples.append(training_data.next())
+			except StopIteration:  				
+				done=True			
+			# res = [ stream_estimate_test(instance) for instance in current_samples]
+			res = Parallel(n_jobs=n_jobs)(delayed(stream_estimate_test)(instance)
+	                               for instance in current_samples)
+			# print res
+			for r in res:				
+				user_ll+= r
+				
+				#update user parameters with the result of this training epoch
+				# current_sage_params[:,user] = params
+			n_examples+=len(res)
+		#average objective and user likelihood
+		# obj/=n_examples
+		user_ll/=n_examples
+		# user_ll_2/=n_examples
+		# print n_examples
+		
 		color_obj=None
 		if obj > prev_obj:
 			color_obj="green"

@@ -86,15 +86,15 @@ if __name__ == "__main__":
     done=False
     while not done:
         try:
-            current_samples = []
-            for _ in xrange(n_jobs): current_samples.append(training_data.next())
+            current_instances = []
+            for _ in xrange(n_jobs): current_instances.append(training_data.next())
         except StopIteration:            
             done=True
         if n_jobs>1:
-            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, sample) 
-                                      for i, sample in enumerate(current_samples))
+            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance) 
+                                      for i, instance in enumerate(current_instances))
         else:
-            res = [parallel_extract(i, sample) for i,sample in enumerate(current_samples)]    
+            res = [parallel_extract(i, instance) for i,instance in enumerate(current_instances)]    
 
         for r in res: stPickle.s_dump_elt(r,new_training_data)        
             
