@@ -9,7 +9,7 @@ assert mode in ["SMALL","ALL"]
 prev_user=None
 message_count=0
 MAX_PER_USER = 1000
-MAX_USERS = 10
+MAX_USERS = 20
 all_users =  {}
 ###### ###### ###### 
 n_docs=0

@@ -32,7 +32,7 @@ def stream_estimate_user(instance):
 	return obj/train_matrix.shape[1], user_ll/test_matrix.shape[1], user, sage.user_etas.get_value()[:,user]				 
 
 if __name__ == "__main__":
-
+	
 	aux_pickle, train_data_path, sage_params_path, n_jobs = sys.argv[1:]
 	n_jobs = int(n_jobs)
 	print "Loading data"
@@ -42,8 +42,8 @@ if __name__ == "__main__":
 	t0 = time.time()	
 	#training parameters 
 	#lrate = 0.00005 + epochs = 200 + mbsize = 400 --> .615
-	lrate = 0.00005
-	epochs = 5
+	lrate = 0.00005	
+	epochs = 200
 	mbsize = 400
 	patience = 5	
 	sage = SAGE(back_word_probs, len(usr2idx), initial_etas=None, lrate=lrate)

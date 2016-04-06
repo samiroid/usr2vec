@@ -32,7 +32,7 @@ if "clean" not in clean_user_tweets:
 
 MAX_WORDS = 20000
 all_users =  {}
-word_counts = Counter()
+word_counter = Counter()
 # max_msg_len = 0
 n_docs=0
 print "Building vocabulary..."
@@ -40,8 +40,8 @@ with open(clean_user_tweets,"r") as fid:
 	for line in fid:	
 		usr = line.split("\t")[0] 		
 		all_users[usr] = None
-		message = line.split("\t")[1].decode("utf-8").split()			
-		word_counts.update(message)		
+		message = line.split("\t")[1].decode("utf-8").split()
+		word_counter.update(message)		
 		#remember the max message length
 		# if len(message) > max_msg_len: max_msg_len = len(message)
 		n_docs+=1
@@ -51,8 +51,9 @@ with open(clean_user_tweets,"r") as fid:
 print ""
 #build user index
 usr2idx = {w:i for i,w in enumerate(all_users.keys())}
+print "Found %d users in the corpus" % len(usr2idx)
 #keep only the MAX_WORDS more frequent words
-sw = sorted(word_counts.items(), key=lambda x:x[1],reverse=True)
+sw = sorted(word_counter.items(), key=lambda x:x[1],reverse=True)
 top_words = {w[0]:None for w in sw[:MAX_WORDS]}
 print "Extracting pre-trained word embeddings"
 with open(emb_path) as fid:        
@@ -123,14 +124,15 @@ with open(clean_user_tweets,"r") as fid:
 		prev_user = u_idx
 		prev_user_data.append(msg_idx)
 print "Computing background word distributions (for SAGE)"
-# word_probs = word_counts / word_counts.sum(0)
+word_probs = word_counts / word_counts.sum(0)
 #divide along axis to get likelihoods
+# set_trace()
 usr_lang_model = usr_wrd_counts / usr_wrd_counts.sum(0)[np.newaxis:,]
 
 #pickle the word and user indices
 print "Pickling stuff..."
 with open(stuff_pickle,"wb") as fid:
-	cPickle.dump([wrd2idx,usr2idx,word_counts,usr_lang_model,E], fid, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump([wrd2idx,usr2idx,word_probs,usr_lang_model,E], fid, cPickle.HIGHEST_PROTOCOL)
 
 
 
