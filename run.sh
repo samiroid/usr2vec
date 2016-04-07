@@ -19,7 +19,7 @@ sage_data_path="DATA/pkl/sage_data.pkl"
 sage_params="DATA/pkl/sage_etas.pkl"
 train_data_path="DATA/pkl/train_data.pkl"
 # u2v_train_data_path="DATA/pkl/u2v_train_data.pkl"
-n_jobs=8
+n_jobs=16
 
 # printf "\n#### Preprocess Data ####\n"
 # python code/prepare_data.py ${user_tweets} ${clean_user_tweets} ${prepare_mode}
@@ -27,11 +27,11 @@ n_jobs=8
 # printf "\n#### Build Training Data #####\n" 
 # python code/build_train.py ${clean_user_tweets} ${embs_txt} ${aux_pickle} ${train_data_path} ${sage_data_path} 
 
-printf "\n##### SAGE fitting #####\n"
-python code/train_sage.py ${aux_pickle} ${sage_data_path} ${sage_params} ${n_jobs}
+# printf "\n##### SAGE fitting #####\n"
+# THEANO_FLAGS="device=cpu" python code/train_sage.py ${aux_pickle} ${sage_data_path} ${sage_params} ${n_jobs}
 
-# echo "\n##### Extract #####\n"
-# python code/extract.py ${aux_pickle} ${embs_pkl} ${sage_params} ${train_data_path} ${n_jobs}
+ # printf "\n##### Extract #####\n"
+ # THEANO_FLAGS="device=cpu" python code/extract.py ${aux_pickle} ${embs_pkl} ${sage_params} ${train_data_path} ${n_jobs}
 
-# echo "\n##### U2V training #####\n"
-# python code/train_u2v.py ${train_data_path} ${aux_pickle} ${usr2vec_embs} ${n_jobs}
+echo "\n##### U2V training #####\n"
+python code/gpu_train_u2v.py ${train_data_path} ${aux_pickle} ${usr2vec_embs} #${n_jobs}

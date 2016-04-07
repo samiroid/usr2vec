@@ -26,7 +26,8 @@ class Usr2Vec():
     #input
     usr_idx      = T.iscalar('usr')    
     sent_idx     = T.ivector('sent')    
-    neg_samp_idx = T.imatrix('neg_sample')     
+    neg_samp_idx = T.imatrix('neg_sample')
+    word_probs   = T.fvector('word_probs')     
     #embedding lookup
     usr         = U[:, usr_idx]
     sent        = E[:, sent_idx] 
@@ -39,25 +40,27 @@ class Usr2Vec():
     pos_score = T.dot(usr,sent)
     neg_score = T.tensordot(usr,neg_samples,axes=(0,0))
     loss      = T.maximum(0, self.margin_loss - pos_score[:,None] + neg_score)
-    loss      = loss.sum(axis=None)
+    final_loss = loss.sum(axis=None) + word_probs.sum()
     #Gradient wrt to user embeddings
-    usr_grad = T.grad(loss, usr)
+    usr_grad = T.grad(final_loss, usr)
     #Sparse update
     upd_usr = T.set_subtensor(usr, usr - lrate*usr_grad)
     updates = ((U, upd_usr),)
-    self.train = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx],
-                                 outputs=loss,
+    self.train = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx, word_probs],
+                                 outputs=final_loss,
                                  updates=updates,
                                  mode="FAST_RUN")
     #\propto P(message|usr)    
-    scores_m = T.exp(T.dot(U.T,E[:,sent_idx]))    
-    # prob = T.nnet.softmax(scores_m.T).T
-    # log_prob = T.log(prob).sum(axis=1)
+    # scores_m = T.exp(T.dot(U.T,E[:,sent_idx]))    
+    scores_m = T.dot(U.T,E[:,sent_idx])    
+    prob = T.nnet.softmax(scores_m.T).T
+    log_prob = T.log(prob).sum(axis=1)
     #sum the scores for all the words    
-    scores_m = scores_m.sum(axis=1)
-    user_score = scores_m[usr_idx]
+    # scores_m = scores_m.sum(axis=1)
+    # user_score = scores_m[usr_idx]
+    user_score = log_prob[usr_idx]
     self.predict = theano.function(inputs=[usr_idx,sent_idx],
-                                   outputs=user_score)    
+                                   outputs=[user_score,prob])    
 
   def rank_loss(self, w_idx, negs_idx, usr, E, U):
     w_emb     = E[:, w_idx]

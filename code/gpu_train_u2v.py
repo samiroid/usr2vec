@@ -1,6 +1,6 @@
 import cPickle 
 from my_utils import colstr
-# from ipdb import set_trace
+from ipdb import set_trace
 import usr2vec
 import sys
 import warnings
@@ -10,26 +10,28 @@ import streaming_pickle as stPickle
 warnings.filterwarnings("ignore")
 import numpy as np
 
-def stream_train_user(i,instance):
-	"""
-		Train the parameters of user with train data 
-		and evaluate with test data
+# def stream_train_user(i,instance):
+# 	"""
+# 		Train the parameters of user with train data 
+# 		and evaluate with test data
 
-		Return: average of the objective function for the training examples
-				average likelihood of the user given the test examples
-				current parameters of user
-	"""
-	user, train, test, cond_probs, neg_samples = instance	
-	sys.stdout.write("\ri:%d " % i)
-	sys.stdout.flush()
-	obj=0
-	log_prob=0	
-	#train
-	for msg_train, neg, cp in zip(train,neg_samples,cond_probs): obj += u2v.train(user, msg_train, neg)			
-	#test
-	for msg_test in test: log_prob += u2v.predict(user, msg_test)
+# 		Return: average of the objective function for the training examples
+# 				average likelihood of the user given the test examples
+# 				current parameters of user
+# 	"""
+# 	user, train, test, cond_probs, neg_samples = instance	
+# 	sys.stdout.write("\ri:%d " % i)
+# 	sys.stdout.flush()
+# 	obj=0
+# 	log_prob=0	
+# 	#train
+# 	for msg_train, neg, cp in zip(train,neg_samples,cond_probs): 
+# 		set_trace()
+# 		obj += u2v.train(user, msg_train, neg, cp)			
+# 	#test
+# 	for msg_test in test: log_prob += u2v.predict(user, msg_test)
 	
-	return obj/len(train), np.log(log_prob)/len(test), user, u2v.params[0].get_value()[:,user]
+# 	return obj/len(train), np.log(log_prob)/len(test), user, u2v.params[0].get_value()[:,user]
 
 if __name__ == "__main__":
 	#command line arguments
@@ -40,10 +42,10 @@ if __name__ == "__main__":
 	n_usrs = len(usr2idx)
 	
 	#model hyperparams
-	lrate  = 0.01
+	lrate  = 0.00001
 	m      = 1
-	epochs = 20	
-	patience = 5
+	epochs = 200	
+	patience = 10
 	drops    = 0
 	u2v = usr2vec.Usr2Vec(E, n_usrs,lrate=lrate)
 	#keep a local copy of user embeddings
@@ -52,7 +54,7 @@ if __name__ == "__main__":
 	t0 = time.time()	
 	print "training: lrate: %.5f | margin loss: %d | epochs: %d\n" % (lrate,m,epochs)
 	tf = open(train_path,"r")	
-	prev_logprob = 0	
+	prev_logprob =  0	
 	best_logprob = 0	
 	prev_obj     = 100000
 	best_obj     = 100000
@@ -71,7 +73,7 @@ if __name__ == "__main__":
 			sys.stdout.write("\rtraining user: %d  " % user)
 			sys.stdout.flush()			
 			for msg_train, neg, cp in zip(train,neg_samples,cond_probs): 
-				obj += u2v.train(user, msg_train, neg)			
+				obj += u2v.train(user, msg_train, neg, cp)			
 					
 		print "testing"
 		tf.seek(0)	
@@ -79,9 +81,14 @@ if __name__ == "__main__":
 		for instance in training_data:
 			user, train, test, cond_probs, neg_samples = instance
 			sys.stdout.write("\rtesting user: %d   " % user)
-			sys.stdout.flush()			
+			sys.stdout.flush()	
+			user_logprob=0		
 			for msg_test in test: 
-				log_prob += u2v.predict(user, msg_test)
+				l,all_prob = u2v.predict(user, msg_test)
+				# from ipdb import set_trace;set_trace()
+				user_logprob+= l
+
+			log_prob += (user_logprob/len(test))
 		#average objective and user likelihood
 		obj/=n_instances
 		log_prob/=n_instances
@@ -90,11 +97,11 @@ if __name__ == "__main__":
 		if obj < prev_obj:
 			obj_color='green'
 			if obj < best_obj:				
-				obj_best=obj
+				best_obj=obj
 		elif obj > prev_obj:
 			color='red'
 		prev_obj=obj
-		obj_str = colstr(("%.3f" % obj),obj_color,(obj_best==obj))
+		obj_str = colstr(("%.3f" % obj),obj_color,(best_obj==obj))
 		sys.stdout.write("\rEpoch:%d | obj: " % (e+1) + obj_str +" | ") 
 		sys.stdout.flush()	
 		et = time.time() - ts
@@ -111,7 +118,7 @@ if __name__ == "__main__":
 			color='red'
 		else:
 			drops+=1		
-		print " user log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))  + " (%.2f secs)" % (et)
+		print " user log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))  + "~%.3f" % np.exp(log_prob) +  " (%.2f secs)" % (et)
 
 		if drops>=patience:
 			print "ran out of patience..."
