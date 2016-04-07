@@ -50,10 +50,11 @@ if __name__ == "__main__":
 	#lrate = 0.00005 + epochs = 200 + mbsize = 400 --> .615
 	lrate = 0.00005	
 	# lrate = 0.000001	
-	# lrate = 0.0001	
+	lrate = 0.0005	
 	# lrate = 0.0005	
 	epochs = 200
 	mbsize = 400
+	mbsize = 100
 	patience = 5	
 	sage = SAGE(back_word_probs, len(usr2idx), initial_etas=None, lrate=lrate)
 	current_sage_params = sage.user_etas.get_value()
