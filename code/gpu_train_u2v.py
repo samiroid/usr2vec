@@ -42,20 +42,21 @@ if __name__ == "__main__":
 	n_usrs = len(usr2idx)
 	
 	#model hyperparams
-	lrate  = 0.00001
-	m      = 1
-	epochs = 200	
-	patience = 10
+	# lrate  = 0.00001
+	lrate  = 0.0001
+	m      = 1 
+	epochs = 25	
+	patience = 5
 	drops    = 0
-	u2v = usr2vec.Usr2Vec(E, n_usrs,lrate=lrate)
+	u2v = usr2vec.Usr2Vec(E, n_usrs,lrate=lrate,margin_loss=m)
 	#keep a local copy of user embeddings
 	# user_embeddings = u2v.params[0].get_value()	
 	
 	t0 = time.time()	
 	print "training: lrate: %.5f | margin loss: %d | epochs: %d\n" % (lrate,m,epochs)
 	tf = open(train_path,"r")	
-	prev_logprob =  0	
-	best_logprob = 0	
+	prev_logprob = -10000	
+	best_logprob = -10000	
 	prev_obj     = 100000
 	best_obj     = 100000
 	for e in xrange(epochs):	
@@ -65,34 +66,18 @@ if __name__ == "__main__":
 		done = False
 		n_instances = 0
 		training_data = stPickle.s_load(tf)   
-		#train		
-		print "training"
+		#train				
 		for instance in training_data:
-			user, train, test, cond_probs, neg_samples = instance	
-			n_instances+=1
-			sys.stdout.write("\rtraining user: %d  " % user)
+			#set_trace()	
+			user, train, test, cond_probs, neg_samples = instance
+			n_instances+=1			
+			sys.stdout.write("\rtraining: %d  " % n_instances)
 			sys.stdout.flush()			
 			for msg_train, neg, cp in zip(train,neg_samples,cond_probs): 
 				obj += u2v.train(user, msg_train, neg, cp)			
-					
-		print "testing"
-		tf.seek(0)	
-		training_data = stPickle.s_load(tf)   		
-		for instance in training_data:
-			user, train, test, cond_probs, neg_samples = instance
-			sys.stdout.write("\rtesting user: %d   " % user)
-			sys.stdout.flush()	
-			user_logprob=0		
-			for msg_test in test: 
-				l,all_prob = u2v.predict(user, msg_test)
-				# from ipdb import set_trace;set_trace()
-				user_logprob+= l
-
-			log_prob += (user_logprob/len(test))
-		#average objective and user likelihood
-		obj/=n_instances
-		log_prob/=n_instances
-		#update model with new user parameters		
+		#average objective 
+		obj/=n_instances	
+		
 		obj_color = None		
 		if obj < prev_obj:
 			obj_color='green'
@@ -101,31 +86,52 @@ if __name__ == "__main__":
 		elif obj > prev_obj:
 			color='red'
 		prev_obj=obj
-		obj_str = colstr(("%.3f" % obj),obj_color,(best_obj==obj))
-		sys.stdout.write("\rEpoch:%d | obj: " % (e+1) + obj_str +" | ") 
-		sys.stdout.flush()	
+		# set_trace()
 		et = time.time() - ts
-		color=None		
-		if log_prob > prev_logprob:
-			drops=0
-			color='green'				
-			if log_prob > best_logprob:	
-				#keep best model			
-				u2v.save_model(user_embs)				
-				best_logprob=log_prob
-		elif log_prob < prev_logprob: 
-			drops+=1
-			color='red'
-		else:
-			drops+=1		
-		print " user log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))  + "~%.3f" % np.exp(log_prob) +  " (%.2f secs)" % (et)
+		obj_str = colstr(("%.3f" % obj),obj_color,(best_obj==obj))
+		sys.stdout.write("\rEpoch:%d | obj: " % (e+1) + obj_str +" | " +  " (%.2f secs)" % (et) ) 
+		sys.stdout.flush()	
+		if not e%5:
+			# print "testing"
+			#rewind
+			tf.seek(0)	
+			training_data = stPickle.s_load(tf)   		
+			for instance in training_data:
+				user, train, test, cond_probs, neg_samples = instance
+				# sys.stdout.write("\rtesting user: %d   " % user)
+				# sys.stdout.flush()	
+				user_logprob=0		
+				for msg_test in test: 
+					l,all_prob = u2v.predict(user, msg_test)
+					# from ipdb import set_trace;set_trace()
+					user_logprob+= l
+				log_prob += (user_logprob/len(test))
 
-		if drops>=patience:
-			print "ran out of patience..."
-			break
-		prev_logprob = log_prob
+			log_prob/=n_instances
+			color=None		
+			if log_prob > prev_logprob:
+				drops=0
+				color='green'				
+				if log_prob > best_logprob:	
+					#keep best model			
+					u2v.save_model(user_embs)				
+					best_logprob=log_prob
+			elif log_prob < prev_logprob: 
+				drops+=1
+				color='red'
+			else:
+				drops+=1		
+			print " user log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))  + "~%.3f" % np.exp(log_prob) 
+
+			if drops>=patience:
+				print "ran out of patience..."
+				break
+			prev_logprob = log_prob
+		else:
+			print ""	
 		#rewind
-		tf.seek(0)	
+		tf.seek(0)
+		
 	print "Took: %d minutes" % ((time.time()-t0)/60)	
 	tf.close()	
 			
