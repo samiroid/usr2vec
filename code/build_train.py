@@ -103,7 +103,7 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]				
-			stPickle.s_dump_elt([prev_user, train, test], f_train)
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)
 			#save data as sparse matrices for SAGE
 			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
 			test_matrix  = as_sparse_matrix(test, len(wrd2idx))		
@@ -117,7 +117,7 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)				
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]
-			stPickle.s_dump_elt([prev_user, train, test], f_train)	
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)	
 			#save data as sparse matrices for SAGE
 			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
 			test_matrix  = as_sparse_matrix(test, len(wrd2idx))		
