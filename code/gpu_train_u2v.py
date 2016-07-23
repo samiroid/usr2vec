@@ -46,6 +46,7 @@ if __name__ == "__main__":
 	lrate  = 0.0001
 	m      = 1 
 	epochs = 25	
+	#epochs = 1	
 	patience = 5
 	drops    = 0
 	u2v = usr2vec.Usr2Vec(E, n_usrs,lrate=lrate,margin_loss=m)

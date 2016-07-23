@@ -45,8 +45,8 @@ with open(clean_user_tweets,"r") as fid:
 		#remember the max message length
 		# if len(message) > max_msg_len: max_msg_len = len(message)
 		n_docs+=1
-		sys.stdout.write("\rdoc:%d" % n_docs)
-		sys.stdout.flush()
+#		sys.stdout.write("\rdoc:%d" % n_docs)
+#		sys.stdout.flush()
 		# all_messages.append(tokens)		
 print ""
 #build user index

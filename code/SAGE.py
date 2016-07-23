@@ -59,9 +59,34 @@ class Sampler:
 		self.wrd2idx = wrd2idx
 		self.idx2wrd = {v:k for k,v in wrd2idx.items()}
 		wrd_prbs = self.softmax(user_etas+m_distribution[:,None])
+		self.new_wrd_prbs = self.softmax(m_distribution[:,None]-user_etas)
+		# from pdb import set_trace; set_trace()
 		#flip the columns to obtain the inverse probality 
 		#(i.e., the word with the highest probability becomes the word with lowest probability)
 		self.inv_wrd_prbs = np.flipud(wrd_prbs)
+
+	def new_negative_samples(self, u_id, exclude=[], n_samples=1):
+		samples = []		
+		while len(samples) != n_samples:
+			vals = np.random.multinomial(1, self.new_wrd_prbs[:,u_id])		
+			wrd_idx = np.nonzero(vals)[0][0]
+			if wrd_idx not in exclude: samples.append(wrd_idx)
+		return samples
+
+	def random_negative_samples(self, exclude=[], n_samples=1):		
+		samples = []		
+		while len(samples) != n_samples:			
+			wrd_idx = np.random.randint(0,len(self.wrd2idx))
+			if wrd_idx not in exclude: samples.append(wrd_idx)
+		return samples
+
+	def simple_negative_samples(self, exclude=[], n_samples=1):		
+		samples = []		
+		while len(samples) != n_samples:
+			vals = np.random.multinomial(1, self.m_distribution)		
+			wrd_idx = np.nonzero(vals)[0][0]
+			if wrd_idx not in exclude: samples.append(wrd_idx)
+		return samples
 
 	def negative_samples(self, u_id, exclude=[], n_samples=1):
 		samples = []		
