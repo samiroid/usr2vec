@@ -11,6 +11,8 @@ pre-requisites:
 requirements:
 * python >= 2.7
 * numpy
+* gensim
+* joblib
 * theano
 
 
