@@ -18,4 +18,6 @@ requirements:
 
 ## Running the code
 
+0. pretrain word embeddings using [gensim] (https://radimrehurek.com/gensim/models/word2vec.html) with hierarchical softmax (see the documention on how to do this). Save the embeddings in binary format.  
 1. clone or download the [my_utils] (https://github.com/samiroid/utils) module and place it under the folder `code`
+2. 
