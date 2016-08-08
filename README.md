@@ -6,7 +6,6 @@ Code for learning user representations as described in the paper *Modelling Cont
 pre-requisites:
 
 * my_utils -> https://github.com/samiroid/utils
-* pre-trained word embeddings (e.g. Skip-gram)
 
 requirements:
 * python >= 2.7
