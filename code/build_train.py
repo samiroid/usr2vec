@@ -25,7 +25,7 @@ def as_dense_matrix(indices,vocab_size):
 		for w,c in Counter(doc).items(): matrix[w,i] = c
 	return matrix
 
-clean_user_tweets, emb_path, stuff_pickle, training_data_path, sage_data_path = sys.argv[1:]
+clean_user_tweets, emb_path, stuff_pickle, training_data_path = sys.argv[1:]
 
 if "clean" not in clean_user_tweets:
 	raise EnvironmentError("Requires \"clean\" file...")
@@ -41,13 +41,9 @@ with open(clean_user_tweets,"r") as fid:
 		usr = line.split("\t")[0] 		
 		all_users[usr] = None
 		message = line.split("\t")[1].decode("utf-8").split()
-		word_counter.update(message)		
-		#remember the max message length
-		# if len(message) > max_msg_len: max_msg_len = len(message)
+		word_counter.update(message)				
 		n_docs+=1
-#		sys.stdout.write("\rdoc:%d" % n_docs)
-#		sys.stdout.flush()
-		# all_messages.append(tokens)		
+
 print ""
 #build user index
 usr2idx = {w:i for i,w in enumerate(all_users.keys())}
@@ -71,8 +67,7 @@ wrd2idx = {w:i for i,w in enumerate(words_with_embedding)}
 #generate the embedding matrix
 E = np.zeros((int(emb_size), len(wrd2idx)))   
 for wrd,idx in wrd2idx.items(): E[:, idx] = top_words[wrd]
-# wrd2idx = {w:i for i,w in enumerate(top_words.keys())}
-# E = None
+
 print "Building training data..."
 word_counts = np.zeros(len(wrd2idx))
 usr_wrd_counts = np.zeros((len(wrd2idx),len(usr2idx)))
@@ -80,8 +75,7 @@ prev_user = None
 prev_user_data = []
 #write train data
 f_train = open(training_data_path,"wb") 
-#write train data for SAGE (SAGE needs sparse matrices)
-f_sage = open(sage_data_path,"wb") 
+
 with open(clean_user_tweets,"r") as fid:		
 	for j, line in enumerate(fid):	
 		user = line.split("\t")[0] 		
@@ -103,11 +97,7 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]				
-			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)
-			#save data as sparse matrices for SAGE
-			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
-			test_matrix  = as_sparse_matrix(test, len(wrd2idx))		
-			stPickle.s_dump_elt([prev_user, train_matrix, test_matrix], f_sage)				
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)			
 			prev_user_data = []
 		elif j == n_docs-1:	
 			#take into account the very last message	
@@ -117,23 +107,15 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)				
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]
-			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)	
-			#save data as sparse matrices for SAGE
-			train_matrix = as_sparse_matrix(train, len(wrd2idx))	
-			test_matrix  = as_sparse_matrix(test, len(wrd2idx))		
-			stPickle.s_dump_elt([prev_user, train_matrix, test_matrix], f_sage)				
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)				
 		prev_user = u_idx
 		prev_user_data.append(msg_idx)
-print "Computing background word distributions (for SAGE)"
-word_probs = word_counts / word_counts.sum(0)
-#divide along axis to get likelihoods
-# set_trace()
-usr_lang_model = usr_wrd_counts / usr_wrd_counts.sum(0)[np.newaxis:,]
 
+unigram_distribution = word_counts / word_counts.sum(0)
 #pickle the word and user indices
 print "Pickling stuff..."
 with open(stuff_pickle,"wb") as fid:
-	cPickle.dump([wrd2idx,usr2idx,word_probs,usr_lang_model,E], fid, cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump([wrd2idx,usr2idx,unigram_distribution,E], fid, cPickle.HIGHEST_PROTOCOL)
 
 
 

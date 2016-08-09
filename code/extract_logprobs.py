@@ -65,11 +65,9 @@ if __name__ == "__main__":
     print "Loading data"
     w2v = gensim.models.Word2Vec.load(embs_path)
     with open(stuff_pickle,"r") as fid:
-        wrd2idx,usr2idx,_,_,_ = cPickle.load(fid)    
-    
+        wrd2idx,usr2idx,_,_ = cPickle.load(fid)        
     #index 2 actual word
-    idx2wrd = {v:k for k,v in wrd2idx.items()}    
-    
+    idx2wrd = {v:k for k,v in wrd2idx.items()}        
     t0 = time.time()
     prev_time = time.time()    
     print "Computing conditional word probabilities"    

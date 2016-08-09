@@ -46,6 +46,12 @@ class Usr2Vec():
     #Sparse update
     upd_usr = T.set_subtensor(usr, usr - lrate*usr_grad)
     updates = ((U, upd_usr),)
+    # self.dbg = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx],
+    #                              outputs=[usr,sent,neg_samples],      
+    #                              mode="FAST_COMPILE")
+    self.dbg = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx],
+                                 outputs=[usr,sent,neg_samples])
+    
     self.train = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx, word_probs],
                                  outputs=final_loss,
                                  updates=updates,

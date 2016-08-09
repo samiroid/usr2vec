@@ -15,24 +15,21 @@ WINDOW_SIZE = 3
 rng = np.random.RandomState(1234)
 PAD_TOKEN = u'_PAD_'
 
-def parallel_extract(i, instance, user_specific=True):    
-    user = instance[0]
+def negative_samples(unigram_distribution, exclude=[], n_samples=1):    
+        samples = []        
+        while len(samples) != n_samples:
+            vals = np.random.multinomial(1, unigram_distribution)        
+            wrd_idx = np.nonzero(vals)[0][0]
+            if wrd_idx not in exclude: samples.append(wrd_idx)
+        return samples
+
+def parallel_extract(i, instance, unigram_distribution):        
     train = instance[1]    
     neg_samples = []
     sys.stdout.write("\ri:%d " % i)
     sys.stdout.flush()    
-    for msg in train:    
-        if user_specific:        
-            # print "sage samples"                    
-            neg_samp = [sage_sampling.negative_samples(user,msg,NEG_SAMP_SIZE) for _ in xrange(len(msg))]        
-
-        else:
-            # print "simple samples"
-            # neg_samp = [sage_sampling.simple_negative_samples(msg,NEG_SAMP_SIZE) for _ in xrange(len(msg))]        
-
-            # neg_samp = [sage_sampling.random_negative_samples(msg,NEG_SAMP_SIZE) for _ in xrange(len(msg))]        
-            neg_samp = [sage_sampling.new_negative_samples(user,msg,NEG_SAMP_SIZE) for _ in xrange(len(msg))]        
-#        from pdb import set_trace; set_trace()
+    for msg in train:            
+        neg_samp = [negative_samples(unigram_distribution,msg,NEG_SAMP_SIZE) for _ in xrange(len(msg))]        
         neg_samples.append(neg_samp)    
     
     instance[4] = neg_samples
@@ -42,17 +39,13 @@ def parallel_extract(i, instance, user_specific=True):
 if __name__ == "__main__":
 
     #command line arguments
-    stuff_pickle, sage_params_path, training_data_path, n_jobs, user_specific = sys.argv[1:]
-    user_specific = eval(user_specific)
+    stuff_pickle, training_data_path, n_jobs = sys.argv[1:]
+    
     n_jobs = int(n_jobs)
     print "Loading data"    
     with open(stuff_pickle,"r") as fid:
-        wrd2idx,usr2idx,_,_,_ = cPickle.load(fid)    
-    with open(sage_params_path,"r") as fid:
-        user_etas, back_word_probs = cPickle.load(fid)
-    #index 2 actual word
-    idx2wrd = {v:k for k,v in wrd2idx.items()}    
-    sage_sampling = SAGE.Sampler(user_etas, back_word_probs, usr2idx, wrd2idx)
+        wrd2idx,usr2idx,unigram_distribution,_ = cPickle.load(fid)    
+    
     t0 = time.time()
     prev_time = time.time()    
     print "Computing negative samples"    
@@ -61,12 +54,7 @@ if __name__ == "__main__":
     new_training_data_path = training_data_path.strip(".pkl")+"_new.pkl"
     new_training_data = open(new_training_data_path,"w")    
     done=False
-    silvio = 0
-    if user_specific:
-        print "SAGE samples"
-    else:
-        print "Simple samples"
-    
+
     while not done:
         
         try:
@@ -75,10 +63,10 @@ if __name__ == "__main__":
         except StopIteration:            
             done=True
         if n_jobs>1:
-            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance,user_specific) 
+            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance,unigram_distribution) 
                                       for i, instance in enumerate(current_instances))
         else:
-            res = [parallel_extract(i, instance,user_specific) for i,instance in enumerate(current_instances)]    
+            res = [parallel_extract(i, instance,unigram_distribution) for i,instance in enumerate(current_instances)]    
 
         for r in res: stPickle.s_dump_elt(r,new_training_data)        
             

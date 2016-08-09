@@ -19,7 +19,8 @@ print "Reading and preprocessing %s data..." % mode
 
 file_counter = 0
 user_counter = {}
-fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
+# fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
+fod = open(clean_file,"w")
 
 with open(user_tweets,"r") as fid:		
 	for line in fid:	
@@ -29,8 +30,9 @@ with open(user_tweets,"r") as fid:
 			# set_trace()
 			user_counter = {}
 			file_counter+=1
-			fod.close()
+			fod.close()			
 			fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
+
 		if mode == "SMALL":
 			# ###### HACKS TO DO PARTIAL PROCESSING
 			if prev_user == usr:
