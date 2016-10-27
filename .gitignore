@@ -1,1 +1,4 @@
 *.pyc
+code/my_utils
+DATA/tmp
+DATA/out

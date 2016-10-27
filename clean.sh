@@ -1,2 +1,2 @@
 printf "cleaning up...\n"
-rm DATA/pkl/*.*
+rm DATA/tmp/*.*
