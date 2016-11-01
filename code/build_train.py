@@ -25,7 +25,7 @@ def as_dense_matrix(indices,vocab_size):
 		for w,c in Counter(doc).items(): matrix[w,i] = c
 	return matrix
 
-clean_user_tweets, emb_path, stuff_pickle, training_data_path, n_slices = sys.argv[1:]
+clean_user_tweets, emb_path, stuff_pickle, training_data_path = sys.argv[1:]
 
 if "clean" not in clean_user_tweets:
 	raise EnvironmentError("Requires \"clean\" file...")
@@ -35,7 +35,7 @@ all_users =  {}
 word_counter = Counter()
 # max_msg_len = 0
 n_docs=0
-print "building vocabulary..."
+print "Building vocabulary..."
 with open(clean_user_tweets,"r") as fid:	
 	for line in fid:	
 		usr = line.split("\t")[0] 		
@@ -47,15 +47,15 @@ with open(clean_user_tweets,"r") as fid:
 print ""
 #build user index
 usr2idx = {w:i for i,w in enumerate(all_users.keys())}
-print "[unique users: %d]" % len(usr2idx)
+print "Found %d users in the corpus" % len(usr2idx)
 #keep only the MAX_WORDS more frequent words
 sw = sorted(word_counter.items(), key=lambda x:x[1],reverse=True)
 top_words = {w[0]:None for w in sw[:MAX_WORDS]}
-print "extracting pre-trained word embeddings..."
+print "Extracting pre-trained word embeddings"
 with open(emb_path) as fid:        
     # Get emb size
-    _, emb_size = fid.readline().split()            
-    for line in fid.readlines():      	
+    _, emb_size = fid.readline().split()        
+    for line in fid.readlines():                    
         items = line.split()
         wrd   = items[0]
         e = np.array(items[1:]).astype(float)            
@@ -68,7 +68,7 @@ wrd2idx = {w:i for i,w in enumerate(words_with_embedding)}
 E = np.zeros((int(emb_size), len(wrd2idx)))   
 for wrd,idx in wrd2idx.items(): E[:, idx] = top_words[wrd]
 
-print "building training data..."
+print "Building training data..."
 word_counts = np.zeros(len(wrd2idx))
 usr_wrd_counts = np.zeros((len(wrd2idx),len(usr2idx)))
 prev_user = None
@@ -76,11 +76,6 @@ prev_user_data = []
 #write train data
 f_train = open(training_data_path,"wb") 
 
-#keep track of how many users go into each file
-users_per_slice=int(len(usr2idx)*1./int(n_slices))
-print "[users/slice: %d]" % users_per_slice
-n_users=0
-file_counter=1
 with open(clean_user_tweets,"r") as fid:		
 	for j, line in enumerate(fid):	
 		user = line.split("\t")[0] 		
@@ -104,14 +99,6 @@ with open(clean_user_tweets,"r") as fid:
 			test  = prev_user_data[split:]				
 			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)			
 			prev_user_data = []
-			n_users+=1		
-			if n_users>=int(users_per_slice):
-				#close current file
-				f_train.close()
-				file_counter+=1
-				next_file = training_data_path.replace(".pkl",str(file_counter))+".pkl"				
-				f_train = open(next_file,"wb") 
-				n_users=0
 		elif j == n_docs-1:	
 			#take into account the very last message	
 			prev_user_data.append(msg_idx)
@@ -126,6 +113,16 @@ with open(clean_user_tweets,"r") as fid:
 
 unigram_distribution = word_counts / word_counts.sum(0)
 #pickle the word and user indices
-print "pickling stuff..."
+print "Pickling stuff..."
 with open(stuff_pickle,"wb") as fid:
 	cPickle.dump([wrd2idx,usr2idx,unigram_distribution,E], fid, cPickle.HIGHEST_PROTOCOL)
+
+
+
+
+
+
+
+
+
+

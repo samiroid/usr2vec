@@ -2,7 +2,7 @@ import sys
 from my_utils import preprocess 
 from ipdb import set_trace
 
-user_tweets, clean_file, mode = sys.argv[1:]
+user_tweets, clean_file, mode, n_users = sys.argv[1:]
 
 mode = mode.upper()
 assert mode in ["SMALL","ALL"]
@@ -17,21 +17,21 @@ all_users =  {}
 n_docs=0
 print "Reading and preprocessing %s data..." % mode
 
-# file_counter = 0
-# user_counter = {}
+file_counter = 0
+user_counter = {}
 # fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
 fod = open(clean_file,"w")
 
 with open(user_tweets,"r") as fid:		
 	for line in fid:	
 		usr = line.split("\t")[0] 	
-		# user_counter[usr]=None
-		# if len(user_counter) > int(n_users):
-		# 	# set_trace()
-		# 	user_counter = {}
-		# 	file_counter+=1
-		# 	fod.close()			
-		# 	fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
+		user_counter[usr]=None
+		if len(user_counter) > int(n_users):
+			# set_trace()
+			user_counter = {}
+			file_counter+=1
+			fod.close()			
+			fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
 
 		if mode == "SMALL":
 			# ###### HACKS TO DO PARTIAL PROCESSING
