@@ -1,6 +1,6 @@
 #!/bin/bash -e
 clear
-
+./clean
 ###########################
 # SETUP (edit these paths)
 
@@ -18,8 +18,12 @@ word_embeddings_txt="DATA/embeddings/embeddings_400.txt"
 #small: just process a subset of the data
 #all:   use all the data
 prepare_mode="small"
-#If you are learning vectors from a large number of users, you may want to do the training in parallel by splitting the users into different blocks. If this paramater is > 0, it specifies how many users go into each block (in practice each block is just a file with the tweets from a group of users) 
-users_per_file=2000
+#When trying to learning embeddings for a large number of users, one may want to parallelize training by splitting the users into different blocks. `n_slices' specifies the number of partitions of the training data (1 is the default)
+n_slices=1
+if [ ! -z "$1" ] 
+	then
+		n_slices=$1			
+fi
 ##########################
 
 # You shouldn't need to chage these settings
@@ -29,7 +33,7 @@ clean_user_tweets="DATA/tmp/usrs_history_clean.txt"
 aux_pickle="DATA/tmp/aux.pkl"
 train_data_path="DATA/tmp/train_data.pkl"
 printf "\n#### Preprocess Data ####\n"
-python code/prepare_data.py ${user_tweets} ${clean_user_tweets} ${prepare_mode} ${users_per_file}
+python code/prepare_data.py ${user_tweets} ${clean_user_tweets} ${prepare_mode} 
 printf "\n#### Build Training Data #####\n" 
-python code/build_train.py ${clean_user_tweets} ${word_embeddings_txt} ${aux_pickle} ${train_data_path} 
+python code/build_train.py ${clean_user_tweets} ${word_embeddings_txt} ${aux_pickle} ${train_data_path} ${n_slices}
 

@@ -59,11 +59,13 @@ def parallel_extract(i, instance):
 if __name__ == "__main__":
 
     #command line arguments
-    stuff_pickle,  embs_path, training_data_path, n_jobs = sys.argv[1:]
+    training_data_path, aux_data_path, embs_path, n_jobs  = sys.argv[1:]
     n_jobs = int(n_jobs)
-    print "Loading data"
+    print "[training data: %s]" % training_data_path 
+    print "[aux data: %s]" % aux_data_path
+    print "Loading..."
     w2v = gensim.models.Word2Vec.load(embs_path)
-    with open(stuff_pickle,"r") as fid:
+    with open(aux_data_path,"r") as fid:
         wrd2idx,usr2idx,_,_ = cPickle.load(fid)        
     #index 2 actual word
     idx2wrd = {v:k for k,v in wrd2idx.items()}        

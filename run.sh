@@ -1,30 +1,32 @@
 #!/bin/bash -e
 clear
+train_slice=$1
 
 ###########################
 # SETUP (edit these paths)
-
+#
 # word embeddings
 word_embeddings_bin="DATA/embeddings/embeddings_400.pkl"
 # user embedding (output)
 usr2vec_embs="DATA/tmp/usr2vec_400.pkl"
-usr2vec_embs_txt="DATA/out/usr2vec_400.txt"
+usr2vec_embs_txt="DATA/out/usr2vec_400_"${train_slice}".txt"
+#
 ###########################
 
-##########################
+###########################
 # OPTIONS
-
+#
 # number of paralel jobs
-n_jobs=20
-##########################
+n_jobs=2
+#
+###########################
 
-### You shouldn't need to chage these settings ###
-
+### You shouldn't need to change these commands ###
 #aux pickle contains wrd2idx,usr2idx,background_lexical_distribution,E
-aux_pickle="DATA/tmp/aux.pkl"
-train_data_path="DATA/tmp/train_data.pkl"
+aux_pickle="DATA/tmp/aux"${train_slice}".pkl"
+train_data_path="DATA/tmp/train_data"${train_slice}".pkl"
 printf "\n##### Estimate Context Conditional Probabilities #####\n"
-THEANO_FLAGS="device=cpu" python code/context_logprobs.py ${aux_pickle} ${word_embeddings_bin} ${train_data_path} ${n_jobs}
+THEANO_FLAGS="device=cpu" python code/context_logprobs.py ${train_data_path} ${aux_pickle} ${word_embeddings_bin} ${n_jobs}
 printf "\n##### Get Negative Samples #####\n"
 THEANO_FLAGS="device=cpu" python code/negative_samples.py ${aux_pickle}   ${train_data_path} ${n_jobs} 
 printf "\n##### U2V training #####\n"

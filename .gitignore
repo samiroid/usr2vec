@@ -1,4 +1,5 @@
 *.pyc
-code/my_utils
+code/my_utils/*
 DATA/tmp
 DATA/out
+code/historical_tweets_extractor.py
