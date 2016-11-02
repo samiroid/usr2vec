@@ -1,60 +1,46 @@
-import sys
+from collections import defaultdict
 from my_utils import preprocess 
 from ipdb import set_trace
+import sys
 
-user_tweets, clean_file, mode, n_users = sys.argv[1:]
+tweets, clean_file, mode = sys.argv[1:]
 
 mode = mode.upper()
 assert mode in ["SMALL","ALL"]
 
-###### HACKS TO DO PARTIAL PROCESSING
-prev_user=None
-message_count=0
-MAX_PER_USER = 100
+################## 
+# settings for SMALL mode (i.e process only a subset of the data)
+MAX_PER_USER = 10
 MAX_USERS = 10
-all_users =  {}
-###### ###### ###### 
 n_docs=0
+#
+################## 
+tweets_by_user = defaultdict(list)
 print "Reading and preprocessing %s data..." % mode
-
-file_counter = 0
-user_counter = {}
-# fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
-fod = open(clean_file,"w")
-
-with open(user_tweets,"r") as fid:		
+with open(tweets,"r") as fid:		
 	for line in fid:	
-		usr = line.split("\t")[0] 	
-		user_counter[usr]=None
-		if len(user_counter) > int(n_users):
-			# set_trace()
-			user_counter = {}
-			file_counter+=1
-			fod.close()			
-			fod = open(clean_file.replace(".txt","_"+str(file_counter))+".txt","w")
-
-		if mode == "SMALL":
-			# ###### HACKS TO DO PARTIAL PROCESSING
-			if prev_user == usr:
-				message_count+=1
-			else:						
-				message_count = 0
-			prev_user = usr
-			if message_count>=MAX_PER_USER: continue
-			all_users[usr] = None
-			if len(all_users)>MAX_USERS: 
-				del all_users[usr]
-				break			
-			###### ###### ###### 
+		user = line.split("\t")[0] 			
 		message = line.split("\t")[1]		
 		message = preprocess(message.decode("utf-8"))		
 		#discard isolated chars        
 		tokens = [a for a in message.split() if len(a) > 1]
-		# word_counts.update(tokens)
-		fod.write("%s\t%s\n" % (usr, ' '.join(tokens).encode("utf-8")))
+		#partial processing 
+		if mode == "SMALL":
+			#keep only MAX_PER_USER messages per user
+			if len(tweets_by_user[user]) > MAX_PER_USER:
+				continue
+			#keep only MAX_USERS users
+			if len(tweets_by_user) > MAX_USERS:
+				#remove the last user because it only has one message	
+				del tweets_by_user[user]
+				print "\n[max users: %d]" % len(tweets_by_user)
+				break
+		tweets_by_user[user].append(' '.join(tokens))
 		n_docs+=1
-		sys.stdout.write("\rdoc:%d" % n_docs)
-		sys.stdout.flush()
-			# all_messages.append(tokens)	
-fod.close()
-print "\nWrote preprocessed file: %s with %d docs" % (clean_file,n_docs)
+		sys.stdout.write("\rdoc #%d" % n_docs)
+		sys.stdout.flush()		
+
+with open(clean_file,"w") as fod:
+	for user, messages in tweets_by_user.items():
+		for m in messages:
+			fod.write("%s\t%s\n" % (user, m.encode("utf-8")))

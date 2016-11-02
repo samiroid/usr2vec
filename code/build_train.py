@@ -1,10 +1,12 @@
-import sys
-from ipdb import set_trace
-import numpy as np
 import cPickle
 from collections import Counter
+from ipdb import set_trace
+import numpy as np
+import operator
+import sys
 import streaming_pickle as stPickle
 from scipy.sparse import csc_matrix
+
 rng = np.random.RandomState(1234)     
 np.set_printoptions(threshold=np.nan)
 
@@ -25,80 +27,107 @@ def as_dense_matrix(indices,vocab_size):
 		for w,c in Counter(doc).items(): matrix[w,i] = c
 	return matrix
 
-clean_user_tweets, emb_path, stuff_pickle, training_data_path = sys.argv[1:]
+tweets, emb_path, training_data_path, aux_data, usr2idx_path, n_slices = sys.argv[1:]
 
-if "clean" not in clean_user_tweets:
+if "clean" not in tweets:
 	raise EnvironmentError("Requires \"clean\" file...")
 
 MAX_WORDS = 20000
-all_users =  {}
 word_counter = Counter()
-# max_msg_len = 0
 n_docs=0
-print "Building vocabulary..."
-with open(clean_user_tweets,"r") as fid:	
+print "building vocabulary..."
+all_users = []
+with open(tweets,"r") as fid:	
 	for line in fid:	
-		usr = line.split("\t")[0] 		
-		all_users[usr] = None
+		usr = line.split("\t")[0] 			
+		all_users += [usr]
 		message = line.split("\t")[1].decode("utf-8").split()
 		word_counter.update(message)				
 		n_docs+=1
-
-print ""
-#build user index
-usr2idx = {w:i for i,w in enumerate(all_users.keys())}
-print "Found %d users in the corpus" % len(usr2idx)
 #keep only the MAX_WORDS more frequent words
 sw = sorted(word_counter.items(), key=lambda x:x[1],reverse=True)
 top_words = {w[0]:None for w in sw[:MAX_WORDS]}
-print "Extracting pre-trained word embeddings"
+print "extracting pre-trained word embeddings..."
 with open(emb_path) as fid:        
     # Get emb size
-    _, emb_size = fid.readline().split()        
-    for line in fid.readlines():                    
+    _, emb_size = fid.readline().split()            
+    z=0
+    for line in fid.readlines():      	
+    	# z+=1
+    	# if z>=10:
+    	# 	print "out early!!!!!!"
+    	# 	break
         items = line.split()
         wrd   = items[0]
         e = np.array(items[1:]).astype(float)            
         if wrd in top_words:
         	top_words[wrd] = e        
-#I WANT TO KEEP ONLY THE WORDS THAT HAVE AN EMBEDDINGx
+#generate the embedding matrix
+#keep only words with pre-trained embedding
 words_with_embedding = [i for i,j in top_words.items() if j is not None]
 wrd2idx = {w:i for i,w in enumerate(words_with_embedding)}
-#generate the embedding matrix
 E = np.zeros((int(emb_size), len(wrd2idx)))   
 for wrd,idx in wrd2idx.items(): E[:, idx] = top_words[wrd]
-
-print "Building training data..."
+print "building training data..."
+n_users = len(set(all_users))
+n_slices = int(n_slices)
+print "[unique users: %d | #slices: %d]" % (n_users, n_slices)
+users_per_slice = n_users*1./n_slices
+if (users_per_slice - int(users_per_slice)) > 0.5: users_per_slice = int(users_per_slice) + 1
+print "[users/slice: %d]" % users_per_slice
+prev_user, prev_user_data = 0, []
 word_counts = np.zeros(len(wrd2idx))
-usr_wrd_counts = np.zeros((len(wrd2idx),len(usr2idx)))
-prev_user = None
-prev_user_data = []
-#write train data
-f_train = open(training_data_path,"wb") 
-
-with open(clean_user_tweets,"r") as fid:		
-	for j, line in enumerate(fid):	
-		user = line.split("\t")[0] 		
+f_train       = open(training_data_path,"wb") 
+f_usr2idx     = open(usr2idx_path,"wb") 
+#keep track of which files were created
+train_files   = [training_data_path[training_data_path.rfind("/")+1:]]
+usr2idx_files = [usr2idx_path[usr2idx_path.rfind("/")+1:]]
+file_counter=1
+usr2idx={}
+with open(tweets,"r") as fid:		
+	for j, line in enumerate(fid):					
 		message = line.split("\t")[1].decode("utf-8").split()	
-		u_idx = usr2idx[user] 
-		if j==0: prev_user = u_idx #first user
 		#convert to indices
 		msg_idx = [wrd2idx[w] for w in message if w in wrd2idx]
-		if len(msg_idx)==0: continue			
-		#compute background and user word distributions (for SAGE)
-		for w_idx in msg_idx:								
-			word_counts[w_idx]+=1	
-			usr_wrd_counts[w_idx,u_idx]+=1
-		#after accumulating all samples for current user
-		#shuffle and write them to disk
-		if u_idx != prev_user:
+		#TODO: I might need to remove this as it might influence later logic
+		if len(msg_idx)==0: continue					
+		user = line.split("\t")[0] 			
+		try:			
+			u_idx = usr2idx[user] 
+		except KeyError:
+			#if not found use the next sequential number
+			usr2idx[user] = len(usr2idx)
+			u_idx = usr2idx[user]		
+		#after accumulating all documents for current user, shuffle and write them to disk		
+		if u_idx != prev_user:			
 			#shuffle the data					
 			rng.shuffle(prev_user_data)
 			split = int(len(prev_user_data)*.9)
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]				
-			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)			
-			prev_user_data = []
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)
+			prev_user_data = []				
+			#partioning the training data
+			if len(usr2idx)>int(users_per_slice):
+				#the last user will be part of the next partition
+				last_user = max(usr2idx.iteritems(), key=operator.itemgetter(1))[0]								
+				del usr2idx[last_user]
+				#write usr2idx and reset
+				cPickle.dump(usr2idx, f_usr2idx)	
+				u_idx = 0			
+				usr2idx = {last_user:u_idx}
+				#close current files
+				f_train.close()
+				f_usr2idx.close()
+				#open next files
+				file_counter += 1
+				next_training_file = training_data_path.replace(".pkl",str(file_counter))+".pkl"			
+				next_usr2idx_file  = usr2idx_path.replace(".pkl",str(file_counter))+".pkl"
+				f_train   = open(next_training_file,"wb") 
+				f_usr2idx = open(next_usr2idx_file,"wb") 				
+				#keep track of which files were created
+				train_files   += [next_training_file[next_training_file.rfind("/")+1:]]				
+				usr2idx_files += [next_usr2idx_file[next_usr2idx_file.rfind("/")+1:]]
 		elif j == n_docs-1:	
 			#take into account the very last message	
 			prev_user_data.append(msg_idx)
@@ -107,22 +136,22 @@ with open(clean_user_tweets,"r") as fid:
 			split = int(len(prev_user_data)*.9)				
 			train = prev_user_data[:split]
 			test  = prev_user_data[split:]
-			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)				
+			stPickle.s_dump_elt([prev_user, train, test, [],[]], f_train)
+			#write usr2idx	
+			cPickle.dump(usr2idx, f_usr2idx)				
+			#close current files
+			f_train.close()
+			f_usr2idx.close()
 		prev_user = u_idx
 		prev_user_data.append(msg_idx)
+		#collect word counts to compute unigram distribution
+		for w_idx in msg_idx:								
+			word_counts[w_idx]+=1	
 
+print "training files :", repr(train_files) 
+print "usr2idx  files :",repr(usr2idx_files)
 unigram_distribution = word_counts / word_counts.sum(0)
 #pickle the word and user indices
-print "Pickling stuff..."
-with open(stuff_pickle,"wb") as fid:
-	cPickle.dump([wrd2idx,usr2idx,unigram_distribution,E], fid, cPickle.HIGHEST_PROTOCOL)
-
-
-
-
-
-
-
-
-
-
+print "pickling aux data..."
+with open(aux_data,"wb") as fid:
+	cPickle.dump([wrd2idx,unigram_distribution,E], fid, cPickle.HIGHEST_PROTOCOL)

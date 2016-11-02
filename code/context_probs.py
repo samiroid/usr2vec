@@ -8,14 +8,11 @@ import streaming_pickle as stPickle
 import sys
 import time
 
-SIZE  = 400 
-NEG_SAMP_SIZE = 10
 WINDOW_SIZE = 3
 rng = np.random.RandomState(1234)
 PAD_TOKEN = u'_PAD_'
 
 def logprob_words_context(w2v, tokens, window_size): 
-
     """
         Given a sentence of tokens = {w1, ..., wn} computes
         logP(w_a|w_b) for all windows of size n
@@ -34,9 +31,8 @@ def logprob_words_context(w2v, tokens, window_size):
         center_word = padded_m[i+window_size]           
         #don't repeat computations for the same pair of words
         word_pairs =  [ [center_word,ctx_word] for 
-                        ctx_word in set(context_window) ]                   
+                        ctx_word in set(context_window) ]                  
         word_scores = w2v.score(word_pairs)
-        # word_logprob[center_word] = round(sum(word_scores),3)
         cp_array[i] = round(sum(word_scores),3)        
     return cp_array
 
@@ -52,19 +48,19 @@ def parallel_extract(i, instance):
         cp = logprob_words_context(w2v, actual_tokens, WINDOW_SIZE)
         # from ipdb import set_trace; set_trace()
         cond_probs.append(np.array(cp,dtype='float32'))
-
     instance[3] = cond_probs
     return instance
     
 if __name__ == "__main__":
-
     #command line arguments
-    stuff_pickle,  embs_path, training_data_path, n_jobs = sys.argv[1:]
+    training_data_path, aux_data_path, embs_path, n_jobs  = sys.argv[1:]
     n_jobs = int(n_jobs)
-    print "Loading data"
+    print "[training data: %s]" % training_data_path 
+    print "[aux data: %s]" % aux_data_path
+    print "Loading..."
     w2v = gensim.models.Word2Vec.load(embs_path)
-    with open(stuff_pickle,"r") as fid:
-        wrd2idx,usr2idx,_,_ = cPickle.load(fid)        
+    with open(aux_data_path,"r") as fid:        
+        wrd2idx,_,_ = cPickle.load(fid)        
     #index 2 actual word
     idx2wrd = {v:k for k,v in wrd2idx.items()}        
     t0 = time.time()
@@ -82,16 +78,12 @@ if __name__ == "__main__":
         except StopIteration:            
             done=True
         if n_jobs>1:
-            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance) 
-                                      for i, instance in enumerate(current_instances))
+            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance)  for i, instance in enumerate(current_instances))
         else:
             res = [parallel_extract(i, instance) for i,instance in enumerate(current_instances)]    
-
         for r in res: stPickle.s_dump_elt(r,new_training_data)        
-            
-    tend = time.time() - t0
-    print "It took: %d minutes (%.2f secs)" % ((tend/60),tend)    
+    tend = time.time() - t0    
     #replace the training data file with the new augmented one    
     os.remove(training_data_path)
     os.rename(new_training_data_path, training_data_path)
-
+    print "It took: %d minutes (%.2f secs)" % ((tend/60),tend)    
