@@ -24,12 +24,6 @@ aux_pickle="DATA/tmp/aux.pkl"
 train_data_path="DATA/tmp/train_data"${train_slice}".pkl"
 
 printf "\n##### U2V training #####\n"
-# python code/train_u2v.py ${train_data_path} ${aux_pickle} ${user_embs_bin} ${user_embs_txt}
-
-
-# -input INPUT -aux AUX [-output OUTPUT] [-lrate LRATE]
-#                     [-margin MARGIN] [-epochs EPOCHS] [-patience PATIENCE]
-
 python code/train_u2v.py -input ${train_data_path} -aux ${aux_pickle} -output ${user_embs_txt} \
 						 -patience 5 \
 						 -margin 1 \

@@ -55,43 +55,44 @@ def parallel_extract(i, instance):
 def get_parser():
     parser = argparse.ArgumentParser(description="Compute context log probabilities for each window of each document")
     parser.add_argument('-input', type=str, required=True, help='train file')
+    parser.add_argument('-emb', type=str, required=True, help='path to word embeddings')
     parser.add_argument('-aux_data', type=str, required=True, help='aux data file')
-    parser.add_argument('-n_splits', type=int, help='number of splits',default=2)
+    parser.add_argument('-n_workers', type=int, help='number of jobs', default=1)    
     return parser
 
 if __name__ == "__main__":
-    #command line arguments
-    training_data_path, aux_data_path, embs_path, n_jobs  = sys.argv[1:]
-    n_jobs = int(n_jobs)
-    print "[training data: %s]" % training_data_path 
-    print "[aux data: %s]" % aux_data_path
-    print "Loading..."
-    w2v = gensim.models.Word2Vec.load(embs_path)
-    with open(aux_data_path,"r") as fid:        
+    #command line arguments    
+    parser = get_parser()
+    args = parser.parse_args()      
+    print "[training data: %s | aux_data: %s | n_workers: %d]" % (args.input, args.aux_data, args.n_workers)     
+    w2v = gensim.models.Word2Vec.load(args.emb)
+    with open(args.aux_data,"r") as fid:        
         wrd2idx,_,_ = cPickle.load(fid)        
     #index 2 actual word
     idx2wrd = {v:k for k,v in wrd2idx.items()}        
     t0 = time.time()
     prev_time = time.time()    
-    print "Computing conditional word probabilities"    
-    tdf = open(training_data_path,"r")
+    print "Computing conditional word probabilities..."    
+    tdf = open(args.input,"r")
     training_data = stPickle.s_load(tdf)        
-    new_training_data_path = training_data_path.strip(".pkl")+"_new.pkl"
-    new_training_data = open(new_training_data_path,"w")    
+    tmp_data_path = args.input.strip(".pkl")+"_new.pkl"
+    new_training_data = open(tmp_data_path,"w")    
     done=False
     while not done:
         try:
             current_instances = []
-            for _ in xrange(n_jobs): current_instances.append(training_data.next())
+            for _ in xrange(args.n_workers): current_instances.append(training_data.next())
         except StopIteration:            
             done=True
-        if n_jobs>1:
-            res = Parallel(n_jobs=n_jobs)(delayed(parallel_extract)(i, instance)  for i, instance in enumerate(current_instances))
+        if args.n_workers>1:
+            # with Parallel(n_jobs=args.n_workers) as parallel:
+            #     res = parallel(delayed(parallel_extract)(i, instance)  for i, instance in enumerate(current_instances))
+            res = Parallel(n_jobs=args.n_workers)(delayed(parallel_extract)(i, instance)  for i, instance in enumerate(current_instances))
         else:
             res = [parallel_extract(i, instance) for i,instance in enumerate(current_instances)]    
         for r in res: stPickle.s_dump_elt(r,new_training_data)        
     tend = time.time() - t0    
     #replace the training data file with the new augmented one    
-    os.remove(training_data_path)
-    os.rename(new_training_data_path, training_data_path)
-    print "It took: %d minutes (%.2f secs)" % ((tend/60),tend)    
+    os.remove(args.input)
+    os.rename(tmp_data_path, args.input)
+    print "[runtime: %d minutes (%.2f secs)]" % ((tend/60),tend)    

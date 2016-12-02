@@ -72,8 +72,7 @@ if __name__ == "__main__":
 				u_idx = len(usr2idx)
 				usr2idx[user] = u_idx				
 			sys.stdout.write("\rtraining: %s  " % user)
-			sys.stdout.flush()			
-
+			sys.stdout.flush()	
 			if args.reshuff:
 				for x in np.random.permutation(len(train)):
 					obj += u2v.train(u_idx, train[x], neg_samples[x], cond_probs[x])		
@@ -107,8 +106,7 @@ if __name__ == "__main__":
 				l,all_prob = u2v.predict(u_idx, msg_test)
 				user_logprob+= l
 			log_prob += (user_logprob/len(test))
-		log_prob/=len(usr2idx)			
-		
+		log_prob/=len(usr2idx)	
 		color=None		
 		if log_prob > prev_logprob:				
 			color='green'				

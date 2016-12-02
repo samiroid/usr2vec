@@ -21,8 +21,8 @@ rm DATA/out/*.* || true
 # 2. are sorted by user (i.e., all the documents of a given user appear sequentially in the file)
 # 3. have at least MIN_MSG_SIZE=4 words (see build_data.py)
 # 
-#DOCS="DATA/txt/user_corpus.txt"
-DOCS="DATA/txt/sample.txt"
+DOCS="DATA/txt/user_corpus.txt"
+# DOCS="DATA/txt/sample.txt"
 # embeddings
 WORD_EMBEDDINGS_TXT="DATA/embeddings/embs_emoji_2_400.txt"
 OUTPUT_PATH="DATA/tmp/train_data.pkl"
@@ -33,10 +33,9 @@ OUTPUT_PATH="DATA/tmp/train_data.pkl"
 # OPTIONS
 #
 MAX_VOCAB_SIZE=50000
-MIN_DOCS=10 #reject users with less than this number of documents
+MIN_DOCS=20 #reject users with less than this number of documents
 #
 ##########################
-
 
 ### ACTION!
 
