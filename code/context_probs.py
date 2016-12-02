@@ -1,3 +1,4 @@
+import argparse
 import cPickle
 import gensim
 from joblib import Parallel, delayed
@@ -10,7 +11,7 @@ import time
 
 WINDOW_SIZE = 3
 rng = np.random.RandomState(1234)
-PAD_TOKEN = u'_PAD_'
+PAD_TOKEN = u'_pad_'
 
 def logprob_words_context(w2v, tokens, window_size): 
     """
@@ -50,7 +51,14 @@ def parallel_extract(i, instance):
         cond_probs.append(np.array(cp,dtype='float32'))
     instance[3] = cond_probs
     return instance
-    
+
+def get_parser():
+    parser = argparse.ArgumentParser(description="Compute context log probabilities for each window of each document")
+    parser.add_argument('-input', type=str, required=True, help='train file')
+    parser.add_argument('-aux_data', type=str, required=True, help='aux data file')
+    parser.add_argument('-n_splits', type=int, help='number of splits',default=2)
+    return parser
+
 if __name__ == "__main__":
     #command line arguments
     training_data_path, aux_data_path, embs_path, n_jobs  = sys.argv[1:]

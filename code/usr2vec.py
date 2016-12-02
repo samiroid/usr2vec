@@ -4,22 +4,37 @@ import numpy as np
 import theano
 import theano.tensor as T
 
-def init_weight(rng, size):
-        
-    W = np.asarray(rng.normal(0,0.01, size=size))
-    return theano.shared(W.astype(theano.config.floatX), borrow=True)
+def init_weight(rng, size):        
+    return np.asarray(rng.normal(0,0.01, size=size))
+    
+
+def init_w2v_gauss(rng, E, n_users):
+    mu  = np.mean(E,axis=1)
+    mu  = np.squeeze(np.asarray(mu))
+    cov = np.cov(E,rowvar=1)
+    return np.random.multivariate_normal(mu, cov,size=n_users).T
+
+def init_w2v_mean(rng, E, n_users):
+    mu  = np.mean(E,axis=1)    
+    U   = np.asarray(rng.normal(0,0.01, size=(E.shape[0],n_users)))    
+    return U + mu[:,None]
+    
 
 class Usr2Vec():
       
-  def __init__(self, E, n_users, lrate=0.0001, margin_loss=1, rng=None):
+  def __init__(self, E, n_users, lrate=0.0001, margin_loss=1, rng=None, init_w2v=False):
 
     # Generate random seed if not provided
     if rng is None:
       rng=np.random.RandomState(1234)            
     #parameters
-    U = init_weight(rng, (E.shape[0],n_users))    
-    E = theano.shared(value=E.astype(theano.config.floatX), 
-                            borrow=True)     
+    if init_w2v:
+        # U = init_w2v_gauss(rng, n_users, E)    
+        U = init_w2v_mean(rng, E, n_users)
+    else:
+        U = init_weight(rng, (E.shape[0],n_users))            
+    U = theano.shared(U.astype(theano.config.floatX), borrow=True)
+    E = theano.shared(E.astype(theano.config.floatX), borrow=True)     
     
     self.params      = [U]         
     self.margin_loss = margin_loss
@@ -73,8 +88,7 @@ class Usr2Vec():
     w_neg_emb = E[:, negs_idx]
     pos_score = T.dot(usr,w_emb)
     neg_score = T.dot(usr,w_neg_emb)
-    loss      = T.maximum(0, self.margin_loss - pos_score + neg_score)  
-
+    loss      = T.maximum(0, self.margin_loss - pos_score + neg_score) 
     return loss 
 
   def save_model(self, path):
