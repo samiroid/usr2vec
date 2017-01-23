@@ -28,8 +28,9 @@ class Usr2Vec():
     if rng is None:
       rng=np.random.RandomState(1234)            
     #parameters
-    if init_w2v:
-        # U = init_w2v_gauss(rng, n_users, E)    
+    if init_w2v == "gauss":        
+        U = init_w2v_gauss(rng, n_users, E)    
+    elif init_w2v == "mean":        
         U = init_w2v_mean(rng, E, n_users)
     else:
         U = init_weight(rng, (E.shape[0],n_users))            
@@ -38,11 +39,13 @@ class Usr2Vec():
     
     self.params      = [U]         
     self.margin_loss = margin_loss
+    self.lrate       = lrate
     #input
     usr_idx      = T.iscalar('usr')    
     sent_idx     = T.ivector('sent')    
     neg_samp_idx = T.imatrix('neg_sample')
     word_probs   = T.fvector('word_probs')     
+    curr_lrate   = T.fscalar('lrate')
     #embedding lookup
     usr         = U[:, usr_idx]
     sent        = E[:, sent_idx] 
@@ -59,7 +62,7 @@ class Usr2Vec():
     #Gradient wrt to user embeddings
     usr_grad = T.grad(final_loss, usr)
     #Sparse update
-    upd_usr = T.set_subtensor(usr, usr - lrate*usr_grad)
+    upd_usr = T.set_subtensor(usr, usr - curr_lrate*usr_grad)
     updates = ((U, upd_usr),)
     # self.dbg = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx],
     #                              outputs=[usr,sent,neg_samples],      
@@ -67,7 +70,7 @@ class Usr2Vec():
     self.dbg = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx],
                                  outputs=[usr,sent,neg_samples])
     
-    self.train = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx, word_probs],
+    self.train = theano.function(inputs=[usr_idx, sent_idx, neg_samp_idx, word_probs,curr_lrate],
                                  outputs=final_loss,
                                  updates=updates,
                                  mode="FAST_RUN")

@@ -28,7 +28,6 @@ python code/train_u2v.py -input ${train_data_path} -aux ${aux_pickle} -output ${
 						 -patience 5 \
 						 -margin 1 \
 						 -epochs 25 \
-						 -lrate 0.0002 \
+						  -reshuff
+						 #-lrate 0.0002 \
 						 # -init_w2v mean
-						 # -reshuff
-

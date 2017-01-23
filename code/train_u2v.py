@@ -56,6 +56,7 @@ if __name__ == "__main__":
 	drops = 0
 	usr2idx = {}
 	tf = open(args.input,"r")	
+	curr_lrate = u2v.lrate
 	for e in xrange(args.epochs):	
 		obj      = 0
 		log_prob = 0
@@ -75,10 +76,10 @@ if __name__ == "__main__":
 			sys.stdout.flush()	
 			if args.reshuff:
 				for x in np.random.permutation(len(train)):
-					obj += u2v.train(u_idx, train[x], neg_samples[x], cond_probs[x])		
+					obj += u2v.train(u_idx, train[x], neg_samples[x], cond_probs[x], curr_lrate)		
 			else:
 				for msg_train, neg, cp in zip(train,neg_samples,cond_probs): 				
-					obj += u2v.train(u_idx, msg_train, neg, cp)		
+					obj += u2v.train(u_idx, msg_train, neg, cp, curr_lrate)		
 		#average objective 
 		obj/=len(usr2idx)			
 		obj_color = None		
@@ -117,9 +118,14 @@ if __name__ == "__main__":
 		elif log_prob < prev_logprob: 
 			drops+=1
 			color='red'
+			#decay the learning rate exponentially
+			curr_lrate*=10**-1
 		else:
-			drops+=1					 		
-		print " user inv log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))  
+			drops+=1	
+		if curr_lrate!=u2v.lrate:
+			print " user inv log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob)) + " (lrate:" + str(curr_lrate)+")" 
+		else:
+			print " user inv log prob: " + colstr(("%.3f" % log_prob), color, (best_logprob==log_prob))
 		if drops>=args.patience:
 			print "ran out of patience..."
 			break

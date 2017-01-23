@@ -33,7 +33,7 @@ OUTPUT_PATH="DATA/tmp/train_data.pkl"
 # OPTIONS
 #
 MAX_VOCAB_SIZE=50000
-MIN_DOCS=20 #reject users with less than this number of documents
+MIN_DOCS=10 #reject users with less than this number of documents
 #
 ##########################
 

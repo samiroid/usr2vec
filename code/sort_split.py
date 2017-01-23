@@ -1,6 +1,7 @@
 import argparse
 from bst import BinarySearchTree
 import math
+import numpy as np
 import os
 from pdb import set_trace
 import streaming_pickle as stPickle
@@ -29,7 +30,7 @@ if __name__ == "__main__":
 		bst.insert((user,len(train)))
 	sorted_values = list(bst.values(reverse=True))
 	sorted_users  = [x[0] for x in sorted_values]	
-	print "[spliting into #files: %d]" % args.n_splits
+	print "[spliting %d users into #files: %d]" % (len(sorted_users),args.n_splits)
 	out_files = []	
 	out_path, ext = os.path.splitext(args.input) 	
 	for i in xrange(args.n_splits):		
@@ -38,7 +39,7 @@ if __name__ == "__main__":
 		f = open(fname,"w")
 		out_files.append(f)
 	tf.seek(0)
-	out_log =  [[]]*args.n_splits
+	out_log =  [[] for x in xrange(args.n_splits)]
 	# set_trace()
 	print "[processing users]"
 	partition_size = math.floor(len(sorted_users)*1.0/args.n_splits)
@@ -50,7 +51,9 @@ if __name__ == "__main__":
 		if fnumber > args.n_splits-1: fnumber = args.n_splits-1	
 		print "   > user: %s | #train: %d | rank: %d | fnum: %d" % (user, len(train), user_rank, fnumber)
 		out_file = out_files[fnumber]
-		stPickle.s_dump_elt(x, out_file)
+		stPickle.s_dump_elt(x, out_file)		
 		out_log[fnumber].append(len(train))
+	print "[avg #docs: ]"
+	for i in xrange(len(out_log)): print "   >file %d: %.3f " % (i,np.mean(out_log[i]))			
 	print "[removing original training file: %s]" % args.input
 	os.remove(args.input)
