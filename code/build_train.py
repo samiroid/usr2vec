@@ -3,13 +3,11 @@ import cPickle
 from collections import Counter
 from ipdb import set_trace
 import numpy as np
-import sys
-import streaming_pickle as stPickle
 import os
+import streaming_pickle as stPickle
 
-rng = np.random.RandomState(1234)     
 np.set_printoptions(threshold=np.nan)
-MIN_MSG_SIZE=4
+MIN_DOC_LEN=4
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Build Training Data")
@@ -18,13 +16,15 @@ def get_parser():
     parser.add_argument('-output', type=str, required=True, help='path of the output')
     parser.add_argument('-vocab_size', type=int, help='path of the output')
     parser.add_argument('-min_docs', type=int, help='reject users with less than min_docs documents',default=10)
+    parser.add_argument('-seed', type=int, default=1234, help='random number generator seed')
     return parser
 
 if __name__ == "__main__" :
 	parser = get_parser()
 	args = parser.parse_args()	
-	# docs, emb_path, training_data_path, aux_data = sys.argv[1:]
-	print "[input: %s | emb: %s | max vocab_size: %d | min_docs: %d |output: %s]" % \
+	rng = np.random.RandomState(args.seed)    
+
+	print "[input: %s | emb: %s | max vocab_size: %d | min_docs: %d | output: %s]" % \
 			(os.path.basename(args.input), \
 			 os.path.basename(args.emb), \
 			 args.vocab_size, \
@@ -65,6 +65,8 @@ if __name__ == "__main__" :
 	E = np.zeros((int(emb_size), len(wrd2idx)))   
 	for wrd,idx in wrd2idx.items(): E[:, idx] = top_words[wrd]
 	print "building training data..."
+	if not os.path.exists(os.path.dirname(args.output)):
+		os.makedirs(os.path.dirname(args.output))
 	prev_user, prev_user_data = None, []
 	word_counts = np.zeros(len(wrd2idx))
 	f_train = open(args.output,"wb") 
@@ -74,7 +76,7 @@ if __name__ == "__main__" :
 			message = line.split("\t")[1].decode("utf-8").split()	
 			#convert to indices
 			msg_idx = [wrd2idx[w] for w in message if w in wrd2idx]
-			if len(msg_idx)<MIN_MSG_SIZE: continue					
+			if len(msg_idx)<MIN_DOC_LEN: continue					
 			u_idx = line.split("\t")[0] 					
 			#after accumulating all documents for current user, shuffle and write them to disk		
 			if prev_user is None:

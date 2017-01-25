@@ -5,8 +5,6 @@ train_slice=$1
 ###########################
 # SETUP (edit these paths)
 #
-# word embeddings
-word_embeddings_bin="DATA/embeddings/embeddings_400.pkl"
 # user embedding (output)
 user_embs_bin="DATA/tmp/usr2vec_400.pkl"
 user_embs_txt="DATA/out/usr2vec_400.txt"

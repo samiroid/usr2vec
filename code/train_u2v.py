@@ -1,6 +1,6 @@
 import argparse
 import cPickle 
-from my_utils import colstr
+from sma_toolkit import colstr
 from pdb import set_trace
 import usr2vec
 import sys
@@ -139,6 +139,9 @@ if __name__ == "__main__":
 	print "Exporting embeddings..."
 	with open(user_emb_bin,"r") as fid:
 		U = cPickle.load(fid)[0]
+	#create dir if it does not exist
+	if not os.path.exists(os.path.dirname(args.output)):
+		os.makedirs(os.path.dirname(args.output))
 	with open(args.output,"w") as fod:
 		fod.write("%d %d\n" % (U.shape[1],U.shape[0]))	
 		for user, u_id in usr2idx.items():		

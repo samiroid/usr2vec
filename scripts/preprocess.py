@@ -1,10 +1,13 @@
 from collections import defaultdict
-from my_utils import preprocess 
 from ipdb import set_trace
+import os
 import sys
 
-tweets, clean_file, mode = sys.argv[1:]
+sys.path.append("code")
+from sma_toolkit.preprocess import preprocess 
 
+#command line arguments
+path_in, path_out, mode = sys.argv[1:]
 mode = mode.upper()
 assert mode in ["SMALL","ALL"]
 
@@ -17,13 +20,11 @@ n_docs=0
 ################## 
 tweets_by_user = defaultdict(list)
 print "Reading and preprocessing %s data..." % mode
-with open(tweets,"r") as fid:		
+with open(path_in,"r") as fid:		
 	for line in fid:	
 		user = line.split("\t")[0] 			
 		message = line.split("\t")[1]		
-		message = preprocess(message.decode("utf-8"))		
-		#discard isolated chars        
-		tokens = [a for a in message.split() if len(a) > 1]
+		message = preprocess(message.decode("utf-8"))				
 		#partial processing 
 		if mode == "SMALL":
 			#keep only MAX_PER_USER messages per user
@@ -35,12 +36,15 @@ with open(tweets,"r") as fid:
 				del tweets_by_user[user]
 				print "\n[max users: %d]" % len(tweets_by_user)
 				break
-		tweets_by_user[user].append(' '.join(tokens))
+		tweets_by_user[user].append(message)
 		n_docs+=1
 		sys.stdout.write("\rdoc #%d" % n_docs)
 		sys.stdout.flush()		
 
-with open(clean_file,"w") as fod:
+if not os.path.exists(os.path.dirname(path_out)):
+	os.makedirs(os.path.dirname(path_out))
+
+with open(path_out,"w") as fod:
 	for user, messages in tweets_by_user.items():
 		for m in messages:
 			fod.write("%s\t%s\n" % (user, m.encode("utf-8")))
