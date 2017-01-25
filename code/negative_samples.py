@@ -102,4 +102,4 @@ if __name__ == "__main__":
     os.remove(args.input)
     os.rename(tmp_data_path, args.input)
     tend = time.time() - t0
-    print "[runtime: %d minutes (%.2f secs)]" % ((tend/60),tend)    
+    print "\n[runtime: %d minutes (%.2f secs)]" % ((tend/60),tend)    

@@ -44,7 +44,8 @@ class Usr2Vec():
     usr_idx      = T.iscalar('usr')    
     sent_idx     = T.ivector('sent')    
     neg_samp_idx = T.imatrix('neg_sample')
-    word_probs   = T.fvector('word_probs')     
+    # word_probs   = T.fvector('word_probs')     
+    word_probs   = T.fscalar('word_probs')     
     curr_lrate   = T.fscalar('lrate')
     #embedding lookup
     usr         = U[:, usr_idx]
@@ -58,7 +59,8 @@ class Usr2Vec():
     pos_score = T.dot(usr,sent)
     neg_score = T.tensordot(usr,neg_samples,axes=(0,0))
     loss      = T.maximum(0, self.margin_loss - pos_score[:,None] + neg_score)
-    final_loss = loss.sum(axis=None) + word_probs.sum()
+    # final_loss = loss.sum(axis=None) + word_probs.sum()
+    final_loss = loss.sum(axis=None) + word_probs
     #Gradient wrt to user embeddings
     usr_grad = T.grad(final_loss, usr)
     #Sparse update
