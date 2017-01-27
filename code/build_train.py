@@ -5,7 +5,7 @@ from ipdb import set_trace
 import numpy as np
 import os
 import streaming_pickle as stPickle
-from contex_probs import ContextProbabilities
+from ctx_window_probs import ContextProbabilities
 np.set_printoptions(threshold=np.nan)
 MIN_DOC_LEN=4
 
