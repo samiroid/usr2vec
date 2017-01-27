@@ -36,7 +36,7 @@ if __name__ == "__main__":
 	args = parser.parse_args()	
 	print "loading data..."	
 	with open(args.aux,"r") as fid:
-		_,_,E = cPickle.load(fid) 
+		_,_,_,E = cPickle.load(fid) 
 	try:
 		n_usrs = count_users(args.input)
 	except IOError:

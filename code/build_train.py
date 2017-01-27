@@ -80,7 +80,7 @@ if __name__ == "__main__" :
 	#object that retrieves pre-computed word-context window log probability scores
 	word_ctx = ContextProbabilities(args.db)
 	prev_user, prev_user_data, prev_ctxscores = None, [], []
-	word_counts = np.zeros(len(wrd2idx))
+	wrd_idx_counts = np.zeros(len(wrd2idx))	
 	f_train = open(args.output,"wb") 
 	rejected_users = []
 	with open(args.input,"r") as fid:		
@@ -145,11 +145,11 @@ if __name__ == "__main__" :
 			prev_ctxscores.append(ctx_score)
 			#collect word counts to compute unigram distribution
 			for w_idx in msg_idx:								
-				word_counts[w_idx]+=1	
+				wrd_idx_counts[w_idx]+=1	
 	f_train.close()				
 	print "[rejected users >> %s]" % repr(rejected_users)
-	unigram_distribution = word_counts / word_counts.sum(0)	
+	unigram_distribution = wrd_idx_counts / wrd_idx_counts.sum(0)	
 	print "[pickling aux data]"
 	aux_data = os.path.split(args.output)[0] + "/aux.pkl"
 	with open(aux_data,"wb") as fid:
-		cPickle.dump([wrd2idx,unigram_distribution,E], fid, cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump([wrd2idx,unigram_distribution, word_counter, E], fid, cPickle.HIGHEST_PROTOCOL)

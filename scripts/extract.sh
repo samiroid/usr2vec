@@ -14,9 +14,9 @@ WORD_EMBEDDINGS_BIN="DATA/embeddings/bin/word2vec.pkl"
 # OPTIONS
 #
 # number of paralel jobs
-N_WORKERS=15
+N_WORKERS=1
 # number of negative samples
-negative_samples=10
+negative_samples=20
 #
 ###########################
 
@@ -39,5 +39,5 @@ printf "\n##### Get Negative Samples #####\n"
 # 
 THEANO_FLAGS="device=cpu" python code/negative_samples.py -input ${train_data_path} \
 														  -aux_data ${aux_data} \
-														  -negative_samples ${negative_samples} \
+														  -neg_samples ${negative_samples} \
 														  -n_workers ${N_WORKERS} 
