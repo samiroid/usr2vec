@@ -136,6 +136,8 @@ if __name__ == "__main__":
                 if not j % 1000: 
                     sys.stdout.write("\r[extracted %d in ~%d minutes]" % (j,(time.time()-ts)/60))
                     sys.stdout.flush()  
+        sys.stdout.write("\r[extracted %d in ~%d minutes]" % (j,(time.time()-ts)/60))
+        sys.stdout.flush()  
         print "\n"
         db.commit()             
         db.close()   
@@ -162,5 +164,7 @@ if __name__ == "__main__":
             if not j % 1000: 
                 sys.stdout.write("\r[scored %d in ~%d minutes]" % (j,(time.time()-ts)/60))
                 sys.stdout.flush()  
+        sys.stdout.write("\r[scored %d in ~%d minutes]" % (j,(time.time()-ts)/60))
+        sys.stdout.flush()  
         db.commit()   
         
