@@ -1,12 +1,13 @@
 import argparse
 import cPickle
 from collections import Counter
+from ctx_window_probs import ContextProbabilities
 from ipdb import set_trace
+from negative_samples import negative_sampler
 import numpy as np
 import os
 import streaming_pickle as stPickle
-from ctx_window_probs import ContextProbabilities
-from negative_samples import negative_sampler
+import time
 np.set_printoptions(threshold=np.nan)
 MIN_DOC_LEN=4
 
@@ -41,6 +42,7 @@ if __name__ == "__main__" :
 			 args.min_docs,   \
 			 os.path.basename(args.output)) 
 
+	t0 = time.time()
 	word_counter = Counter()
 	n_docs=0	
 	with open(args.input,"r") as fid:	
@@ -167,3 +169,5 @@ if __name__ == "__main__" :
 	aux_data = os.path.split(args.output)[0] + "/aux.pkl"
 	with open(aux_data,"wb") as fid:
 		cPickle.dump([wrd2idx,unigram_distribution, word_counter, E], fid, cPickle.HIGHEST_PROTOCOL)
+	tend = time.time() - t0
+	print "\n[runtime: %d minutes (%.2f secs)]" % ((tend/60),tend)    
