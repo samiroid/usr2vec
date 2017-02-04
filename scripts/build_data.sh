@@ -43,7 +43,7 @@ NEGATIVE_SAMPLES=20
 ### ACTION!
 
 printf "\n#### Build Training Data #####\n"
-THEANO_FLAGS="device=cpu" python code/new_build_train.py -input ${DATA} -emb ${WORD_EMBEDDINGS_TXT} \
+THEANO_FLAGS="device=cpu" python code/build_train.py -input ${DATA} -emb ${WORD_EMBEDDINGS_TXT} \
 							-db $CTX_PROBS_DB \
 							-output ${OUTPUT_PATH} -min_docs ${MIN_DOCS} \
 							-vocab_size ${MAX_VOCAB_SIZE} \
