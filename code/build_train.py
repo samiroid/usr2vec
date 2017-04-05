@@ -19,15 +19,17 @@ def get_parser():
     parser.add_argument('-vocab_size', type=int, help='path of the output')
     parser.add_argument('-min_docs', type=int, help='reject users with less than min_docs documents',default=10)
     parser.add_argument('-seed', type=int, default=1234, help='random number generator seed')
-    parser.add_argument('-db', type=str, required=True, help='word context window scores DB')
+    parser.add_argument('-ctx_prob_db', type=str, help='word context window scores DB. If this parameter is not set, word-context scores will not be used')
     parser.add_argument('-neg_samples', type=int, help='number of negative samples', default=10)
     return parser
 
 def window_context_scores(ctx_handler, msg_idx, idx2wrd):
+	if ctx_handler is None:
+		return 0		
 	#convert back to tokens (only the ones that were kept)				
 	tokens = [idx2wrd[i] for i in msg_idx]
 	#retrieve word-context window scores	
-	ctx_score = sum(ctx_handler.score_context_windows(tokens))
+	ctx_score = np.mean(ctx_handler.score_context_windows(tokens))
 	return round(ctx_score,4)			
 
 if __name__ == "__main__" :
@@ -35,11 +37,12 @@ if __name__ == "__main__" :
 	args = parser.parse_args()	
 	rng = np.random.RandomState(args.seed)    
 
-	print "[input: %s | emb: %s | max vocab_size: %d | min_docs: %d | output: %s]" % \
+	print "[input: %s | emb: %s | max vocab_size: %d | min_docs: %d | context probs DB: %s | output: %s]" % \
 			(os.path.basename(args.input), \
 			 os.path.basename(args.emb), \
 			 args.vocab_size, \
 			 args.min_docs,   \
+			 args.ctx_prob_db,   \
 			 os.path.basename(args.output)) 
 
 	t0 = time.time()
@@ -83,8 +86,11 @@ if __name__ == "__main__" :
 	print "building training data..."
 	if not os.path.exists(os.path.dirname(args.output)):
 		os.makedirs(os.path.dirname(args.output))
-	#object that retrieves pre-computed word-context window log probability scores
-	word_ctx = ContextProbabilities(args.db)
+	if args.ctx_prob_db is not None:
+		#object that retrieves pre-computed word-context window log probability scores
+		word_ctx = ContextProbabilities(args.ctx_prob_db)
+	else:
+		word_ctx = None
 	prev_user, prev_user_data, prev_ctxscores, prev_neg_samples  = None, [], [], []
 	wrd_idx_counts = np.zeros(len(wrd2idx))	
 	f_train = open(args.output,"wb") 
@@ -157,7 +163,8 @@ if __name__ == "__main__" :
 			prev_user_data.append(msg_idx)
 			prev_neg_samples.append(negative_samples)
 			#retrieve word-window contex scores
-			ctx_score = window_context_scores(word_ctx,msg_idx,idx2wrd)			
+			ctx_score = window_context_scores(word_ctx,msg_idx,idx2wrd)	
+			print "ctx_score ", ctx_score
 			prev_ctxscores.append(ctx_score)			
 			#collect word counts to compute unigram distribution
 			for w_idx in msg_idx:								

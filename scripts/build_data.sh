@@ -44,10 +44,10 @@ NEGATIVE_SAMPLES=20
 
 printf "\n#### Build Training Data #####\n"
 THEANO_FLAGS="device=cpu" python code/build_train.py -input ${DATA} -emb ${WORD_EMBEDDINGS_TXT} \
-							-db $CTX_PROBS_DB \
-							-output ${OUTPUT_PATH} -min_docs ${MIN_DOCS} \
-							-vocab_size ${MAX_VOCAB_SIZE} \
-							-neg_samples $NEGATIVE_SAMPLES
+													-ctx_prob_db $CTX_PROBS_DB \
+													-output ${OUTPUT_PATH} -min_docs ${MIN_DOCS} \
+													-vocab_size ${MAX_VOCAB_SIZE} \
+													-neg_samples $NEGATIVE_SAMPLES
 
 
 if (($n_splits > 1 )); 
