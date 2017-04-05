@@ -164,7 +164,6 @@ if __name__ == "__main__" :
 			prev_neg_samples.append(negative_samples)
 			#retrieve word-window contex scores
 			ctx_score = window_context_scores(word_ctx,msg_idx,idx2wrd)	
-			print "ctx_score ", ctx_score
 			prev_ctxscores.append(ctx_score)			
 			#collect word counts to compute unigram distribution
 			for w_idx in msg_idx:								
@@ -173,7 +172,8 @@ if __name__ == "__main__" :
 	print "[rejected users >> %s]" % repr(rejected_users)
 	unigram_distribution = wrd_idx_counts / wrd_idx_counts.sum(0)	
 	print "[pickling aux data]"
-	aux_data = os.path.split(args.output)[0] + "/aux.pkl"
+	#aux_data = os.path.split(args.output)[0] + "/aux.pkl"
+	aux_data = os.path.splitext(args.output)[0] + "_aux.pkl"
 	with open(aux_data,"wb") as fid:
 		cPickle.dump([wrd2idx,unigram_distribution, word_counter, E], fid, cPickle.HIGHEST_PROTOCOL)
 	tend = time.time() - t0
