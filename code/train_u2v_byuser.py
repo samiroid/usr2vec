@@ -70,17 +70,14 @@ if __name__ == "__main__":
 		prev_obj, best_obj  = 10**100, 10**100
 		drops = 0		
 		curr_lrate = u2v.lrate
-		user, train, test, cond_probs, neg_samples = instance
-		if args.nocp:
-			cond_probs = [0]*len(cond_probs)
+		user, train, test, neg_samples = instance
 		try:
 			u_idx  = usr2idx[user]
 		except KeyError:
 			u_idx = len(usr2idx)
 			usr2idx[user] = u_idx		
 		if not args.quiet:		
-			print "[user: %s (%d/%d)]" % (user,z+1,n_usrs)
-		
+			print "[user: %s (%d/%d)]" % (user,z+1,n_usrs)		
 		user_time  = time.time()	
 		for e in xrange(args.epochs):	
 			############# TRAIN 	
@@ -89,10 +86,10 @@ if __name__ == "__main__":
 			prev_lrate = curr_lrate
 			if args.reshuff:
 				for x in np.random.permutation(len(train)):
-					obj += u2v.train(u_idx, train[x], neg_samples[x], cond_probs[x], curr_lrate)	
+					obj += u2v.train(u_idx, train[x], neg_samples[x], curr_lrate)
 			else:
-				for msg_train, neg, cp in zip(train,neg_samples,cond_probs): 				
-					obj += u2v.train(u_idx, msg_train, neg, cp, curr_lrate)			
+				for msg_train, neg in zip(train, neg_samples): 				
+					obj += u2v.train(u_idx, msg_train, neg, curr_lrate)			
 			#average objective 
 			obj/=len(train)			
 			obj_color = None		
@@ -105,7 +102,7 @@ if __name__ == "__main__":
 			prev_obj=obj	
 			if not args.quiet:					
 				obj_str = colstr(("%.3f" % obj),obj_color,(best_obj==obj))
-				sys.stdout.write("\r\tepoch:%d | obj: %s" % ((e+1),obj_str)) 			
+				sys.stdout.write("\r\tepoch:%d | obj: %s" % ((e+1),obj_str)) 	
 				sys.stdout.flush()			
 
 			############# EVALUATE 
