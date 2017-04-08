@@ -37,7 +37,7 @@ if __name__ == "__main__" :
 	args = parser.parse_args()	
 	rng = np.random.RandomState(args.seed)    
 
-	print "[input: %s | emb: %s | max vocab_size: %d | min_docs: %d | context probs DB: %s | output: %s]" % \
+	print "[input: %s | emb: %s | max vocab_size: %s | min_docs: %d | context probs DB: %s | output: %s]" % \
 			(os.path.basename(args.input), \
 			 os.path.basename(args.emb), \
 			 args.vocab_size, \
