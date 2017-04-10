@@ -110,7 +110,8 @@ if __name__ == "__main__":
 			for msg_test in test: 			
 				l,all_prob = u2v.predict(u_idx, msg_test)			
 				logprob+= l
-			logprob/=len(test)				
+			logprob/=len(test)	
+			logprob=round(logprob,4)			
 			color=None		
 			if logprob > prev_logprob:				
 				color='green'				

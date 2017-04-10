@@ -27,7 +27,7 @@ if __name__ == "__main__" :
 	args = parser.parse_args()	
 	rng = np.random.RandomState(args.seed)    
 
-	print "[input: %s | emb: %s | max vocab_size: %s | min_word_freq: %s | output: %s]" %  (os.path.basename(args.input), 
+	print "[input: %s | word vectors: %s | max vocab_size: %s | min_word_freq: %s | output: %s]" %  (os.path.basename(args.input), 
 						 os.path.basename(args.emb), 
 						 args.vocab_size, 
 						 args.min_word_freq, 
