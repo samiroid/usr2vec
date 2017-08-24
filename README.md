@@ -1,14 +1,18 @@
 Usr2Vec
 =======
 
-Implementation of the the *usr2vec* model to induce neural user embeddings, as described in the paper in the [paper](https://arxiv.org/abs/1705.00335) *Quantifying Mental Health from Social Media with Neural User Embeddings*.
+Implementation of the the *usr2vec* model to induce neural user embeddings, as described in the paper in the [paper](https://arxiv.org/abs/1705.00335) *Quantifying Mental Health from Social Media with Neural User Embeddings*. The resulting embeddings capture latent user aspects, e.g. mental-health status (Figure 1) and political leanings (Figure 2)
+
 A previous version of this model, described in the paper *Modelling Context with User Embeddings for Sarcasm Detection in Social Media* can be found [here](https://github.com/samiroid/usr2vec/edit/v1/).
+
+![alt text](https://i.imgur.com/hbrY4bU.jpg "User Embeddings") Figure 1 - User embeddings projected into 2-Dimensions and colored according to mental health status. 
+
+![alt text](https://i.imgur.com/G4to8cU.png "User Embeddings") Figure 2 - User embeddings projected into 2-Dimensions and colored according to political leaning. 
 
 If you use this code please cite our paper as ?
 
 ## Requirements:
-The software is implemented in `python+scipi+theano` and requires the following packages:
-* python >= 2.7 
+The software is implemented in python 2.7 and requires the following packages:
 * [sma_toolkit](https://github.com/samiroid/sma_toolkit)
 * numpy
 * gensim
@@ -32,7 +36,7 @@ The software works in two main steps: (1) building the training the data; and (2
     3. run `./scripts/setup.sh` 
 2. Build training data
     1. get some pretrained word embeddings
-    2. edit the paths on the file `scripts/build_data.sh` (i.e. the variables DATA, WORD_EMBEDDINGS)
+    2. edit the paths on the file `scripts/build_data.sh` (i.e. the variables *DATA_PATH*, *WORD_EMBEDDINGS*)
     3. run `./scripts/build_data.sh` 
-3. Train model: run `./scripts/build_data.sh [DATA] [OUTPUT_PATH]`
+3. Train model: run `./scripts/build_data.sh [DATA_PATH] [OUTPUT_PATH]`
 
