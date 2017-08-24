@@ -9,7 +9,8 @@ A previous version of this model, described in the paper *Modelling Context with
 
 ![alt text](https://i.imgur.com/G4to8cU.png "User Embeddings") Figure 2 - User embeddings projected into 2-Dimensions and colored according to political leaning. 
 
-If you use this code please cite our paper as ?
+If you use this code please cite our paper as:
+> Amir, S., Coppersmith, G., Carvalho, P., Silva, M.J. and Wallace, B.C., 2017. *Quantifying Mental Health from Social Media with Neural User Embeddings*. In Journal of Machine Learning Research, W&C Track, Volume 68. 
 
 ## Requirements:
 The software is implemented in python 2.7 and requires the following packages:
