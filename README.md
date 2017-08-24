@@ -3,7 +3,7 @@ Usr2Vec
 
 Implementation of the the *usr2vec* model to induce neural user embeddings, as described in the paper in the [paper](https://arxiv.org/abs/1705.00335) *Quantifying Mental Health from Social Media with Neural User Embeddings*. The resulting embeddings capture latent user aspects, e.g. political leanings and mental-health status (Figure 1)
 
-A previous version of this model, described in the paper *Modelling Context with User Embeddings for Sarcasm Detection in Social Media* can be found [here](https://github.com/samiroid/usr2vec/edit/v1/).
+A previous version of this model, described in the paper *Modelling Context with User Embeddings for Sarcasm Detection in Social Media* can be found [here](https://github.com/samiroid/usr2vec/tree/v1).
 
 ![alt text](https://i.imgur.com/hbrY4bU.jpg "User Embeddings") Figure 1 - User embeddings projected into 2-Dimensions and colored according to mental health status. 
 
