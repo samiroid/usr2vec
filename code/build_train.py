@@ -46,9 +46,8 @@ if __name__ == "__main__" :
 	#keep only the args.vocab_size most frequent words
 	tw = sorted(wc.items(), key=lambda x:x[1],reverse=True)
 	top_words = {w[0]:i for i,w in enumerate(tw[:args.vocab_size])}	
-	print "loading word embeddings..."		
-	full_E, full_wrd2idx = emb_utils.read_embeddings(args.emb,top_words)
-	ooevs = emb_utils.get_OOEVs(full_E, full_wrd2idx)
+	print "loading word embeddings..."	
+	full_E, ooevs, _ = emb_utils.read_embeddings(args.emb,top_words)
 	#keep only words with pre-trained embeddings
 	old_len = len(top_words)
 	for w in ooevs:
@@ -74,11 +73,8 @@ if __name__ == "__main__" :
 	f_train = open(args.output,"wb") 
 	
 	with open(args.input,"r") as fid:		
-		for j, line in enumerate(fid):		
-			try:			
-				message = line.replace("\"", "").replace("'","").split("\t")[1].decode("utf-8").split()	
-			except:
-				print "ignored line: {}".format(line)
+		for j, line in enumerate(fid):					
+			message = line.replace("\"", "").replace("'","").split("\t")[1].decode("utf-8").split()	
 			#convert to indices
 			msg_idx = [wrd2idx[w] for w in message if w in wrd2idx]			
 			#compute negative samples

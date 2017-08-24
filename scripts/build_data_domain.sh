@@ -28,8 +28,8 @@ DATA="raw_data/user_corpus.txt"
 #CTX_PROBS_DB="raw_data/twmh_ctxprobs.db"
 #CTX_PROBS_DB="/home/ubuntu/twmh_ctxprobs.db"
 # embeddings
-WORD_EMBEDDINGS_TXT="DATA/embeddings/word_embeddings.txt"
-OUTPUT_PATH="DATA/pkl/mental_health_corpus.pkl"
+WORD_EMBEDDINGS_TXT="DATA/embeddings/word_embeddings_domain.txt"
+OUTPUT_PATH="DATA/pkl/mental_health_corpus_domain.pkl"
 #
 ###########################
 
