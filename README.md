@@ -1,11 +1,11 @@
 Usr2Vec
 =======
 
-Code for learning user representations as described in the paper *Modelling Context with User Embeddings for Sarcasm Detection in Social Media* [[paper] (https://arxiv.org/abs/1607.00976)] [[bib] ()]
+Code for learning user representations as described in the paper *Modelling Context with User Embeddings for Sarcasm Detection in Social Media* [paper](https://arxiv.org/abs/1607.00976)
 
 requirements:
 * python >= 2.7
-* my_utils (grab it [here] (https://github.com/samiroid/utils))
+* [sma_toolkit](https://github.com/samiroid/sma_toolkit)
 * numpy
 * gensim
 * joblib
