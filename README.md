@@ -1,3 +1,5 @@
+### Deprecated 
+This codebase is deprecated. See this [repo](https://github.com/samiroid/U2V/) for an updated implementation of User2Vec
 Usr2Vec
 =======
 
